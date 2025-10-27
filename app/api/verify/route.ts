@@ -26,14 +26,21 @@ export async function POST(request: NextRequest) {
     let status: "valid" | "invalid" | "fraudulent" = "valid"
     let reason: string | undefined
 
-    // Step 1: Document Classification with LandingAI (use original PDF if available)
-    const classificationResult = await classifyDocument(originalFile)
-    details.push(`Documento identificado como: ${classificationResult.documentType}`)
+    const extractedData = await extractPayrollData(originalFile)
 
-    if (classificationResult.documentType !== "payroll" && classificationResult.documentType !== "nomina") {
-      status = "invalid"
-      reason = "El documento no es una nómina válida"
-      details.push("❌ Tipo de documento no válido")
+    const hasPayrollData = hasRequiredPayrollFields(extractedData)
+
+    // Step 1: Document Classification - simplified since we already have extracted data
+    if (hasPayrollData) {
+      details.push(`✓ Documento identificado como: nomina`)
+    } else {
+      const classificationResult = await classifyDocument(originalFile)
+      details.push(`Documento identificado como: ${classificationResult.documentType}`)
+      if (classificationResult.documentType !== "payroll" && classificationResult.documentType !== "nomina") {
+        status = "invalid"
+        reason = "El documento no es una nómina válida"
+        details.push("❌ Tipo de documento no válido")
+      }
     }
 
     // Step 2: AI Detection with AIorNOT (use converted image)
@@ -46,9 +53,6 @@ export async function POST(request: NextRequest) {
     } else {
       details.push("✓ No se detectó manipulación por IA")
     }
-
-    // Step 3: Data Extraction (use original PDF if available)
-    const extractedData = await extractPayrollData(originalFile)
 
     // Step 4: Validation
     const validationResults = validatePayrollData(extractedData)
@@ -63,7 +67,7 @@ export async function POST(request: NextRequest) {
       status,
       reason,
       details,
-      documentType: classificationResult.documentType,
+      documentType: hasPayrollData ? "nomina" : "unknown",
       isAIGenerated: aiDetectionResult.isAIGenerated,
       extractedData,
     }
@@ -88,91 +92,11 @@ async function classifyDocument(file: File): Promise<{ documentType: string; con
       return { documentType: "nomina", confidence: 0.95 }
     }
 
-    const formData = new FormData()
-    formData.append("document", file)
-
-    console.log("[v0] Calling LandingAI ADE parse endpoint")
-
-    const response = await fetch("https://api.va.eu-west-1.landing.ai/v1/ade/parse", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: formData,
-    })
-
-    const responseText = await response.text()
-    console.log("[v0] LandingAI ADE response status:", response.status)
-    console.log("[v0] LandingAI ADE response text:", responseText.substring(0, 500))
-
-    if (!response.ok) {
-      console.error("[v0] LandingAI ADE API error:", response.status, responseText)
-      throw new Error(`LandingAI ADE API error: ${response.status} - ${responseText}`)
-    }
-
-    let data
-    try {
-      data = JSON.parse(responseText)
-    } catch (parseError) {
-      console.error("[v0] Failed to parse LandingAI response as JSON:", parseError)
-      throw new Error(`Invalid JSON response from LandingAI: ${responseText.substring(0, 100)}`)
-    }
-
-    console.log("[v0] LandingAI ADE parsed data:", JSON.stringify(data).substring(0, 500))
-
-    const markdown = data.markdown || ""
-    const lowerMarkdown = markdown.toLowerCase()
-
-    // Count how many payroll-related keywords are present
-    const payrollKeywords = [
-      "nómina",
-      "nomina",
-      "salario",
-      "sueldo",
-      "cotización",
-      "cotizacion",
-      "irpf",
-      "devengos",
-      "deducciones",
-      "deduccion",
-      "líquido",
-      "liquido",
-      "percibir",
-      "seguridad social",
-      "empresa",
-      "trabajador",
-      "empleado",
-      "antigüedad",
-      "antiguedad",
-      "periodo de liquidación",
-      "periodo de liquidacion",
-      "total devengado",
-      "total deducido",
-      "base de cotización",
-      "base de cotizacion",
-      "contingencias comunes",
-      "desempleo",
-      "formación profesional",
-      "formacion profesional",
-    ]
-
-    const foundKeywords = payrollKeywords.filter((keyword) => lowerMarkdown.includes(keyword))
-    const keywordCount = foundKeywords.length
-
-    // If we find at least 3 payroll keywords, it's likely a payroll document
-    const isPayroll = keywordCount >= 3
-    const confidence = Math.min(0.95, 0.5 + keywordCount * 0.1)
-
-    console.log(`[v0] Found ${keywordCount} payroll keywords:`, foundKeywords.slice(0, 5))
-
-    return {
-      documentType: isPayroll ? "nomina" : "unknown",
-      confidence: isPayroll ? confidence : 0.1,
-    }
+    console.log("[v0] Skipping LandingAI parse call - using field-based classification")
+    return { documentType: "unknown", confidence: 0.5 }
   } catch (error) {
     console.error("[v0] LandingAI classification error:", error)
-    // Fallback to mock data
-    return { documentType: "nomina", confidence: 0.95 }
+    return { documentType: "unknown", confidence: 0.5 }
   }
 }
 
@@ -409,4 +333,18 @@ function validatePayrollData(data: Record<string, any>): { isValid: boolean; rea
   }
 
   return { isValid, reason, details }
+}
+
+function hasRequiredPayrollFields(data: Record<string, any>): boolean {
+  const requiredFields = ["employeeName", "companyName", "totalEarnings", "payrollDate"]
+
+  // Check if at least 3 out of 4 key fields are present and not empty
+  const presentFields = requiredFields.filter((field) => {
+    const value = data[field]
+    return value !== undefined && value !== null && value !== ""
+  })
+
+  console.log(`[v0] Found ${presentFields.length} required payroll fields:`, presentFields)
+
+  return presentFields.length >= 3
 }

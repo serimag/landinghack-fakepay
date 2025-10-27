@@ -8,8 +8,8 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Verificación de Nóminas | payshit.ai",
-  description: "Sistema de validación automática de nóminas españolas",
+  title: "payshit.ai | Verificación de Nóminas con IA",
+  description: "Detecta nóminas fraudulentas con inteligencia artificial",
   generator: "v0.app",
 }
 
@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es">
+    <html lang="es" className="dark">
       <body className={`font-sans antialiased`}>
         {children}
         <Analytics />

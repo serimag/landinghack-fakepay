@@ -1,0 +1,84 @@
+"use client"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Sun, Moon } from "lucide-react"
+
+interface NavbarProps {
+  language: "es" | "en"
+  onLanguageChange: (lang: "es" | "en") => void
+}
+
+const translations = {
+  es: {
+    home: "Home",
+    api: "API",
+  },
+  en: {
+    home: "Home",
+    api: "API",
+  },
+}
+
+export function Navbar({ language, onLanguageChange }: NavbarProps) {
+  const [theme, setTheme] = useState<"light" | "dark">("dark")
+  const t = translations[language]
+
+  const toggleTheme = () => {
+    const newTheme = theme === "dark" ? "light" : "dark"
+    setTheme(newTheme)
+    document.documentElement.classList.toggle("dark")
+  }
+
+  return (
+    <nav className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
+          <div className="flex items-center">
+            <span className="font-mono text-xl font-bold text-foreground">payshit.ai</span>
+          </div>
+
+          <div className="hidden md:flex md:items-center md:gap-8">
+            <a href="#" className="text-sm font-medium text-foreground transition-colors hover:text-primary">
+              {t.home}
+            </a>
+            <a
+              href="#"
+              className="relative text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {t.api}
+              <span className="ml-1 inline-block align-super rounded-full border border-primary bg-transparent px-1.5 py-0.5 text-[8px] font-normal uppercase tracking-wide text-white">
+                Soon
+              </span>
+            </a>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9">
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+
+            <div className="flex items-center gap-1 rounded-md bg-secondary p-1">
+              <Button
+                variant={language === "en" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => onLanguageChange("en")}
+                className="h-7 px-3 text-xs font-medium"
+              >
+                EN
+              </Button>
+              <Button
+                variant={language === "es" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => onLanguageChange("es")}
+                className="h-7 px-3 text-xs font-medium"
+              >
+                ES
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+  )
+}
