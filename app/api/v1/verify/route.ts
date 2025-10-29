@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { process } from "node:process"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -36,9 +37,13 @@ function validateApiKey(request: NextRequest): boolean {
   const authHeader = request.headers.get("authorization")
   const apiKey = authHeader?.replace("Bearer ", "")
 
-  // For now, accept the same password as the web interface
-  // In production, you should use separate API keys stored in a database
-  const validApiKey = "ivuRTRu6jkzDYjjIHfQg"
+  // Get API key from environment variable
+  const validApiKey = process.env.PAYROLL_API_KEY
+
+  if (!validApiKey) {
+    console.error("[v0] PAYROLL_API_KEY environment variable is not set")
+    return false
+  }
 
   return apiKey === validApiKey
 }

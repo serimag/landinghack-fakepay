@@ -17,14 +17,14 @@ export default function APIDocsPage() {
   }
 
   const curlExample = `curl -X POST https://payshit.ai/api/v1/verify \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Authorization: Bearer your_api_key_here" \\
   -F "file=@/path/to/nomina.pdf"`
 
   const pythonExample = `import requests
 
 url = "https://payshit.ai/api/v1/verify"
 headers = {
-    "Authorization": "Bearer YOUR_API_KEY"
+    "Authorization": "Bearer your_api_key_here"
 }
 files = {
     "file": open("nomina.pdf", "rb")
@@ -47,7 +47,7 @@ form.append('file', fs.createReadStream('nomina.pdf'));
 const response = await fetch('https://payshit.ai/api/v1/verify', {
   method: 'POST',
   headers: {
-    'Authorization': 'Bearer YOUR_API_KEY'
+    'Authorization': 'Bearer your_api_key_here'
   },
   body: form
 });
@@ -123,7 +123,12 @@ console.log('AI Generated:', result.aiGenerated);`
             <div>
               <h3 className="mb-2 font-semibold text-card-foreground">Autenticación</h3>
               <p className="mb-2 text-sm text-muted-foreground">Incluye tu API key en el header Authorization:</p>
-              <div className="rounded-lg bg-secondary/50 p-4 font-mono text-sm">Authorization: Bearer YOUR_API_KEY</div>
+              <div className="rounded-lg bg-secondary/50 p-4 font-mono text-sm">
+                Authorization: Bearer your_api_key_here
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Contacta con el administrador para obtener tu API key
+              </p>
             </div>
           </div>
         </Card>
@@ -151,7 +156,7 @@ console.log('AI Generated:', result.aiGenerated);`
                   <tbody className="font-mono">
                     <tr className="border-b border-border/50">
                       <td className="py-2">Authorization</td>
-                      <td className="py-2 text-muted-foreground">Bearer YOUR_API_KEY</td>
+                      <td className="py-2 text-muted-foreground">Bearer your_api_key_here</td>
                       <td className="py-2 text-green-500">Sí</td>
                     </tr>
                     <tr>
