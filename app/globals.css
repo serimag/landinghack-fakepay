@@ -4,25 +4,27 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated to dark cybersecurity theme with red accents */
-  --background: oklch(0.08 0.01 240);
-  --foreground: oklch(0.98 0.005 240);
-  --card: oklch(0.12 0.015 240);
-  --card-foreground: oklch(0.98 0.005 240);
-  --popover: oklch(0.12 0.015 240);
-  --popover-foreground: oklch(0.98 0.005 240);
+  /* Light mode colors - clean and professional with soft background */
+  /* Changed background from pure white to soft warm gray */
+  --background: oklch(0.96 0.008 60);
+  --foreground: oklch(0.15 0.01 240);
+  /* Changed card background to slightly warmer off-white */
+  --card: oklch(0.99 0.005 60);
+  --card-foreground: oklch(0.15 0.01 240);
+  --popover: oklch(0.99 0.005 60);
+  --popover-foreground: oklch(0.15 0.01 240);
   --primary: oklch(0.55 0.22 25);
   --primary-foreground: oklch(0.98 0.005 240);
-  --secondary: oklch(0.18 0.02 240);
-  --secondary-foreground: oklch(0.98 0.005 240);
-  --muted: oklch(0.18 0.02 240);
-  --muted-foreground: oklch(0.55 0.02 240);
+  --secondary: oklch(0.93 0.01 60);
+  --secondary-foreground: oklch(0.15 0.01 240);
+  --muted: oklch(0.93 0.01 60);
+  --muted-foreground: oklch(0.45 0.02 240);
   --accent: oklch(0.55 0.22 25);
   --accent-foreground: oklch(0.98 0.005 240);
   --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(0.98 0.005 240);
-  --border: oklch(0.2 0.02 240);
-  --input: oklch(0.2 0.02 240);
+  --border: oklch(0.88 0.01 240);
+  --input: oklch(0.88 0.01 240);
   --ring: oklch(0.55 0.22 25);
   --chart-1: oklch(0.55 0.22 25);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -30,48 +32,51 @@
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
   --radius: 0.5rem;
-  --sidebar: oklch(0.12 0.015 240);
-  --sidebar-foreground: oklch(0.98 0.005 240);
+  --sidebar: oklch(0.96 0.008 60);
+  --sidebar-foreground: oklch(0.15 0.01 240);
   --sidebar-primary: oklch(0.55 0.22 25);
   --sidebar-primary-foreground: oklch(0.98 0.005 240);
-  --sidebar-accent: oklch(0.18 0.02 240);
-  --sidebar-accent-foreground: oklch(0.98 0.005 240);
-  --sidebar-border: oklch(0.2 0.02 240);
+  --sidebar-accent: oklch(0.93 0.01 60);
+  --sidebar-accent-foreground: oklch(0.15 0.01 240);
+  --sidebar-border: oklch(0.88 0.01 240);
   --sidebar-ring: oklch(0.55 0.22 25);
 }
 
 .dark {
-  --background: oklch(0.08 0.01 240);
+  /* Dark mode colors - deep blue cybersecurity theme with red accents */
+  /* Changed background from pure black to deep navy blue */
+  --background: oklch(0.12 0.04 250);
   --foreground: oklch(0.98 0.005 240);
-  --card: oklch(0.12 0.015 240);
+  /* Changed card background to slightly lighter navy blue */
+  --card: oklch(0.16 0.045 250);
   --card-foreground: oklch(0.98 0.005 240);
-  --popover: oklch(0.12 0.015 240);
+  --popover: oklch(0.16 0.045 250);
   --popover-foreground: oklch(0.98 0.005 240);
   --primary: oklch(0.55 0.22 25);
   --primary-foreground: oklch(0.98 0.005 240);
-  --secondary: oklch(0.18 0.02 240);
+  --secondary: oklch(0.2 0.04 250);
   --secondary-foreground: oklch(0.98 0.005 240);
-  --muted: oklch(0.18 0.02 240);
+  --muted: oklch(0.2 0.04 250);
   --muted-foreground: oklch(0.55 0.02 240);
   --accent: oklch(0.55 0.22 25);
   --accent-foreground: oklch(0.98 0.005 240);
   --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(0.98 0.005 240);
-  --border: oklch(0.2 0.02 240);
-  --input: oklch(0.2 0.02 240);
+  --border: oklch(0.24 0.04 250);
+  --input: oklch(0.24 0.04 250);
   --ring: oklch(0.55 0.22 25);
   --chart-1: oklch(0.55 0.22 25);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.12 0.015 240);
+  --sidebar: oklch(0.16 0.045 250);
   --sidebar-foreground: oklch(0.98 0.005 240);
   --sidebar-primary: oklch(0.55 0.22 25);
   --sidebar-primary-foreground: oklch(0.98 0.005 240);
-  --sidebar-accent: oklch(0.18 0.02 240);
+  --sidebar-accent: oklch(0.2 0.04 250);
   --sidebar-accent-foreground: oklch(0.98 0.005 240);
-  --sidebar-border: oklch(0.2 0.02 240);
+  --sidebar-border: oklch(0.24 0.04 250);
   --sidebar-ring: oklch(0.55 0.22 25);
 }
 

@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Sun, Moon } from "lucide-react"
+import Link from "next/link"
+import { useTheme } from "next-themes"
 
 interface NavbarProps {
   language: "es" | "en"
@@ -21,13 +22,11 @@ const translations = {
 }
 
 export function Navbar({ language, onLanguageChange }: NavbarProps) {
-  const [theme, setTheme] = useState<"light" | "dark">("dark")
+  const { theme, setTheme } = useTheme()
   const t = translations[language]
 
   const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark"
-    setTheme(newTheme)
-    document.documentElement.classList.toggle("dark")
+    setTheme(theme === "dark" ? "light" : "dark")
   }
 
   return (
@@ -35,22 +34,21 @@ export function Navbar({ language, onLanguageChange }: NavbarProps) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
-            <span className="font-mono text-xl font-bold text-foreground">payshit.ai</span>
+            <Link href="/" className="font-mono text-xl font-bold text-foreground hover:text-primary transition-colors">
+              payshit.ai
+            </Link>
           </div>
 
           <div className="hidden md:flex md:items-center md:gap-8">
-            <a href="#" className="text-sm font-medium text-foreground transition-colors hover:text-primary">
+            <Link href="/" className="text-sm font-medium text-foreground transition-colors hover:text-primary">
               {t.home}
-            </a>
-            <a
-              href="#"
-              className="relative text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            </Link>
+            <Link
+              href="/api-docs"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               {t.api}
-              <span className="ml-1 inline-block align-super rounded-full border border-primary bg-transparent px-1.5 py-0.5 text-[8px] font-normal uppercase tracking-wide text-white">
-                Soon
-              </span>
-            </a>
+            </Link>
           </div>
 
           <div className="flex items-center gap-2">

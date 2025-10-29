@@ -12,12 +12,14 @@ import {
   Database,
   FileSearch,
   ChevronDown,
+  Info,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Navbar } from "@/components/navbar"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 type VerificationStep = "upload" | "classifying" | "ai-detection" | "extracting" | "validating" | "complete"
 type VerificationStatus = "idle" | "processing" | "success" | "error"
@@ -26,6 +28,11 @@ interface VerificationResult {
   status: "valid" | "invalid" | "fraudulent"
   reason?: string
   details: string[]
+  detailedChecks?: Array<{
+    label: string
+    status: "success" | "error" | "warning"
+    explanation: string
+  }>
   documentType?: string
   isAIGenerated?: boolean
   extractedData?: Record<string, any>
@@ -473,23 +480,35 @@ export default function PayrollVerificationPage() {
               </div>
             </div>
 
-            {result.status === "valid" && result.details && result.details.length > 0 && (
+            {result.status === "valid" && result.detailedChecks && result.detailedChecks.length > 0 && (
               <div className="mb-6 space-y-2 rounded-lg border border-border bg-secondary/30 p-4">
                 <h3 className="mb-3 font-semibold text-card-foreground">{t.results.checksTitle}</h3>
-                <div className="grid gap-3 md:grid-cols-2">
-                  {result.details.map((detail, index) => (
-                    <div key={index} className="flex items-start gap-2">
-                      {detail.startsWith("✓") ? (
-                        <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" />
-                      ) : detail.startsWith("❌") ? (
-                        <XCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-500" />
-                      ) : (
-                        <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-yellow-500" />
-                      )}
-                      <p className="text-sm text-card-foreground">{detail.replace(/^[✓❌⚠️]\s*/, "")}</p>
-                    </div>
-                  ))}
-                </div>
+                <TooltipProvider>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {result.detailedChecks.map((check, index) => (
+                      <div key={index} className="flex items-start gap-2">
+                        {check.status === "success" ? (
+                          <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" />
+                        ) : check.status === "error" ? (
+                          <XCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-500" />
+                        ) : (
+                          <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-yellow-500" />
+                        )}
+                        <p className="flex-1 text-sm text-card-foreground">{check.label}</p>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button className="flex-shrink-0 text-muted-foreground transition-colors hover:text-foreground">
+                              <Info className="h-4 w-4" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="left" className="max-w-xs">
+                            <p className="text-xs">{check.explanation}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    ))}
+                  </div>
+                </TooltipProvider>
               </div>
             )}
 
