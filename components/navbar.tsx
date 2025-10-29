@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Sun, Moon } from "lucide-react"
+import { Sun, Moon, LogOut } from "lucide-react"
 import Link from "next/link"
 import { useTheme } from "next-themes"
 import { usePathname } from "next/navigation"
@@ -9,20 +9,23 @@ import { usePathname } from "next/navigation"
 interface NavbarProps {
   language: "es" | "en"
   onLanguageChange: (lang: "es" | "en") => void
+  onLogout?: () => void // Added optional logout handler
 }
 
 const translations = {
   es: {
     home: "Home",
     api: "API",
+    logout: "Cerrar sesión",
   },
   en: {
     home: "Home",
     api: "API",
+    logout: "Logout",
   },
 }
 
-export function Navbar({ language, onLanguageChange }: NavbarProps) {
+export function Navbar({ language, onLanguageChange, onLogout }: NavbarProps) {
   const { theme, setTheme } = useTheme()
   const t = translations[language]
   const pathname = usePathname()
@@ -83,6 +86,18 @@ export function Navbar({ language, onLanguageChange }: NavbarProps) {
                 ES
               </Button>
             </div>
+
+            {onLogout && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onLogout}
+                className="h-9 gap-2 text-muted-foreground hover:text-foreground"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">{t.logout}</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>

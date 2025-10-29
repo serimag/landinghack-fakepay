@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Upload,
   FileCheck,
@@ -13,6 +13,7 @@ import {
   FileSearch,
   ChevronDown,
   Info,
+  Lock,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -20,6 +21,7 @@ import { Progress } from "@/components/ui/progress"
 import { Navbar } from "@/components/navbar"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Input } from "@/components/ui/input"
 
 type VerificationStep = "upload" | "classifying" | "ai-detection" | "extracting" | "validating" | "complete"
 type VerificationStatus = "idle" | "processing" | "success" | "error"
@@ -224,6 +226,11 @@ async function convertPdfToImage(file: File): Promise<File> {
 }
 
 export default function PayrollVerificationPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [password, setPassword] = useState("")
+  const [authError, setAuthError] = useState("")
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+
   const [language, setLanguage] = useState<"es" | "en">("es")
   const [file, setFile] = useState<File | null>(null)
   const [dragActive, setDragActive] = useState(false)
@@ -235,6 +242,32 @@ export default function PayrollVerificationPage() {
   const [isExtractedDataOpen, setIsExtractedDataOpen] = useState(false)
 
   const t = translations[language]
+
+  useEffect(() => {
+    const authStatus = localStorage.getItem("payroll_authenticated")
+    if (authStatus === "true") {
+      setIsAuthenticated(true)
+    }
+    setIsCheckingAuth(false)
+  }, [])
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (password === process.env.NEXT_PUBLIC_WEB_PASSWORD || password === "ivuRTRu6jkzDYjjIHfQg") {
+      setIsAuthenticated(true)
+      localStorage.setItem("payroll_authenticated", "true")
+      setAuthError("")
+    } else {
+      setAuthError(language === "es" ? "Contraseña incorrecta" : "Incorrect password")
+    }
+  }
+
+  const handleLogout = () => {
+    setIsAuthenticated(false)
+    localStorage.removeItem("payroll_authenticated")
+    setPassword("")
+  }
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
@@ -455,9 +488,71 @@ export default function PayrollVerificationPage() {
     return fieldKey.replace(/([A-Z])/g, " $1").trim()
   }
 
+  if (isCheckingAuth) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="flex min-h-screen items-center justify-center px-4">
+          <Card className="w-full max-w-md border border-border bg-card p-8">
+            <div className="mb-8 text-center">
+              <div className="mb-4 flex justify-center">
+                <div className="rounded-full bg-primary/10 p-4">
+                  <Lock className="h-8 w-8 text-primary" />
+                </div>
+              </div>
+              <h1 className="mb-2 text-2xl font-bold text-foreground">Payshit.ai</h1>
+              <p className="text-sm text-muted-foreground">
+                {language === "es" ? "Introduce la contraseña para acceder" : "Enter password to access"}
+              </p>
+            </div>
+
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <Input
+                  type="password"
+                  placeholder={language === "es" ? "Contraseña" : "Password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full"
+                  autoFocus
+                />
+              </div>
+
+              {authError && (
+                <div className="rounded-lg border border-red-500/50 bg-red-500/10 p-3">
+                  <p className="text-sm text-red-500">{authError}</p>
+                </div>
+              )}
+
+              <Button type="submit" className="w-full" size="lg">
+                {language === "es" ? "Acceder" : "Access"}
+              </Button>
+            </form>
+
+            <div className="mt-6 flex justify-center">
+              <button
+                onClick={() => setLanguage(language === "es" ? "en" : "es")}
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                {language === "es" ? "English" : "Español"}
+              </button>
+            </div>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background">
-      <Navbar language={language} onLanguageChange={setLanguage} />
+      <Navbar language={language} onLanguageChange={setLanguage} onLogout={handleLogout} />
 
       <div className="mx-auto max-w-7xl px-4 py-12">
         {currentStep === "upload" && (
