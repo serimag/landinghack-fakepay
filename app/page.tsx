@@ -79,6 +79,37 @@ const translations = {
       extractedTitle: "Datos Extraídos",
       verifyAnother: "Verificar Otra Nómina",
     },
+    checks: {
+      labels: {
+        "Documento identificado como: nomina": "Document identified as: payslip",
+        "No se detectó manipulación por IA": "No AI manipulation detected",
+        "Fecha de nómina válida": "Valid payslip date",
+        "Fecha de nómina no válida": "Invalid payslip date",
+        "Nómina con más de 3 meses de antigüedad": "Payslip older than 3 months",
+        "Periodo de liquidación válido": "Valid settlement period",
+        "Periodo de liquidación anterior a la antigüedad": "Settlement period before seniority date",
+        "Total deducido correcto": "Correct total deductions",
+        "Las deducciones no suman el total deducido": "Deductions don't match total",
+        "Total devengado verificado": "Total earnings verified",
+        "NIF de empleado válido": "Valid employee ID",
+        "NIF de empleado inválido": "Invalid employee ID",
+        "Formato de NIF inválido": "Invalid ID format",
+        "CIF de empresa válido": "Valid company tax ID",
+        "Formato de CIF inválido": "Invalid company tax ID format",
+      },
+    },
+    fields: {
+      employeeName: "Nombre del Empleado",
+      employeeNIF: "NIF del Empleado",
+      companyName: "Nombre de la Empresa",
+      companyCIF: "CIF de la Empresa",
+      payrollDate: "Fecha de la Nómina",
+      liquidationPeriod: "Periodo de Liquidación",
+      seniorityDate: "Fecha de Antigüedad",
+      totalEarnings: "Total Devengado",
+      totalDeductions: "Total Deducido",
+      netSalary: "Líquido a Percibir",
+    },
   },
   en: {
     hero: {
@@ -119,6 +150,37 @@ const translations = {
       checksTitle: "Checks Performed",
       extractedTitle: "Extracted Data",
       verifyAnother: "Verify Another Payslip",
+    },
+    checks: {
+      labels: {
+        "Documento identificado como: nomina": "Document identified as: payslip",
+        "No se detectó manipulación por IA": "No AI manipulation detected",
+        "Fecha de nómina válida": "Valid payslip date",
+        "Fecha de nómina no válida": "Invalid payslip date",
+        "Nómina con más de 3 meses de antigüedad": "Payslip older than 3 months",
+        "Periodo de liquidación válido": "Valid settlement period",
+        "Periodo de liquidación anterior a la antigüedad": "Settlement period before seniority date",
+        "Total deducido correcto": "Correct total deductions",
+        "Las deducciones no suman el total deducido": "Deductions don't match total",
+        "Total devengado verificado": "Total earnings verified",
+        "NIF de empleado válido": "Valid employee ID",
+        "NIF de empleado inválido": "Invalid employee ID",
+        "Formato de NIF inválido": "Invalid ID format",
+        "CIF de empresa válido": "Valid company tax ID",
+        "Formato de CIF inválido": "Invalid company tax ID format",
+      },
+    },
+    fields: {
+      employeeName: "Employee Name",
+      employeeNIF: "Employee ID",
+      companyName: "Company Name",
+      companyCIF: "Company Tax ID",
+      payrollDate: "Payroll Date",
+      liquidationPeriod: "Settlement Period",
+      seniorityDate: "Seniority Date",
+      totalEarnings: "Total Earnings",
+      totalDeductions: "Total Deductions",
+      netSalary: "Net Salary",
     },
   },
 }
@@ -297,6 +359,101 @@ export default function PayrollVerificationPage() {
 
   const currentStepIndex = getStepIndex(currentStep)
   const progress = currentStep === "upload" ? 0 : (currentStepIndex / 5) * 100
+
+  const translateCheckLabel = (label: string): string => {
+    if (language === "es") return label
+
+    // Try exact match first
+    if (t.checks.labels[label as keyof typeof t.checks.labels]) {
+      return t.checks.labels[label as keyof typeof t.checks.labels]
+    }
+
+    // Handle dynamic labels like "Documento identificado como: unknown"
+    if (label.startsWith("Documento identificado como:")) {
+      const docType = label.split(":")[1]?.trim()
+      return `Document identified as: ${docType}`
+    }
+
+    if (label.startsWith("Probabilidad de IA:")) {
+      const percentage = label.split(":")[1]?.trim()
+      return `AI probability: ${percentage}`
+    }
+
+    // Return original if no translation found
+    return label
+  }
+
+  const translateExplanation = (explanation: string, label: string): string => {
+    if (language === "es") return explanation
+
+    // Translate common patterns in explanations
+    const translations: Record<string, string> = {
+      "El documento contiene los campos requeridos de una nómina": "The document contains the required payslip fields",
+      "nombre del empleado": "employee name",
+      empresa: "company",
+      "datos salariales": "salary data",
+      "El sistema ha analizado el documento y lo ha clasificado como":
+        "The system has analyzed the document and classified it as",
+      "con una confianza del": "with a confidence of",
+      "El análisis de AIorNOT ha detectado que este documento tiene una probabilidad del":
+        "AIorNOT analysis has detected that this document has a probability of",
+      "de haber sido generado o manipulado por inteligencia artificial":
+        "of having been generated or manipulated by artificial intelligence",
+      "El análisis de AIorNOT indica que este documento tiene una probabilidad muy baja":
+        "AIorNOT analysis indicates that this document has a very low probability",
+      "de haber sido generado o manipulado por IA. El documento parece ser auténtico":
+        "of having been generated or manipulated by AI. The document appears to be authentic",
+      "La fecha de la nómina": "The payslip date",
+      "está dentro del rango válido de los últimos 3 meses": "is within the valid range of the last 3 months",
+      "es posterior a la fecha actual. Las nóminas no pueden tener fechas futuras":
+        "is after the current date. Payslips cannot have future dates",
+      "es anterior a 3 meses desde hoy. Solo se aceptan nóminas de los últimos 3 meses":
+        "is more than 3 months old. Only payslips from the last 3 months are accepted",
+      "El periodo de liquidación": "The settlement period",
+      "es posterior a la fecha de antigüedad del empleado": "is after the employee's seniority date",
+      "lo cual es correcto": "which is correct",
+      "es anterior a la fecha de antigüedad del empleado": "is before the employee's seniority date",
+      "Esto es imposible ya que el empleado no trabajaba en la empresa en ese periodo":
+        "This is impossible as the employee was not working at the company during that period",
+      "El cálculo es correcto: Total devengado": "The calculation is correct: Total earnings",
+      "Total deducido": "Total deductions",
+      "Líquido a percibir": "Net salary",
+      "Error en el cálculo": "Calculation error",
+      "debería ser": "should be",
+      "pero el documento indica": "but the document shows",
+      Diferencia: "Difference",
+      "El total devengado": "The total earnings",
+      "ha sido verificado y es consistente con el líquido a percibir":
+        "has been verified and is consistent with the net salary",
+      "El NIF del empleado": "The employee's ID",
+      "tiene un formato correcto y el dígito de control es válido":
+        "has a correct format and the control digit is valid",
+      "tiene un dígito de control incorrecto. Debería ser": "has an incorrect control digit. It should be",
+      "en lugar de": "instead of",
+      "no tiene el formato correcto. Debe ser 8 dígitos seguidos de una letra mayúscula":
+        "does not have the correct format. It must be 8 digits followed by an uppercase letter",
+      "El CIF de la empresa": "The company's tax ID",
+      "tiene un formato válido: letra inicial seguida de 7 dígitos y un dígito de control":
+        "has a valid format: initial letter followed by 7 digits and a control digit",
+      "no tiene el formato correcto. Debe ser una letra mayúscula seguida de 7 dígitos y un dígito de control":
+        "does not have the correct format. It must be an uppercase letter followed by 7 digits and a control digit",
+    }
+
+    let translated = explanation
+    for (const [spanish, english] of Object.entries(translations)) {
+      translated = translated.replace(spanish, english)
+    }
+
+    return translated
+  }
+
+  const translateFieldName = (fieldKey: string): string => {
+    if (t.fields[fieldKey as keyof typeof t.fields]) {
+      return t.fields[fieldKey as keyof typeof t.fields]
+    }
+    // Fallback: convert camelCase to readable format
+    return fieldKey.replace(/([A-Z])/g, " $1").trim()
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -494,7 +651,7 @@ export default function PayrollVerificationPage() {
                         ) : (
                           <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-yellow-500" />
                         )}
-                        <p className="flex-1 text-sm text-card-foreground">{check.label}</p>
+                        <p className="flex-1 text-sm text-card-foreground">{translateCheckLabel(check.label)}</p>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <button className="flex-shrink-0 text-muted-foreground transition-colors hover:text-foreground">
@@ -502,7 +659,7 @@ export default function PayrollVerificationPage() {
                             </button>
                           </TooltipTrigger>
                           <TooltipContent side="left" className="max-w-xs">
-                            <p className="text-xs">{check.explanation}</p>
+                            <p className="text-xs">{translateExplanation(check.explanation, check.label)}</p>
                           </TooltipContent>
                         </Tooltip>
                       </div>
@@ -529,7 +686,7 @@ export default function PayrollVerificationPage() {
                         {Object.entries(result.extractedData).map(([key, value]) => (
                           <div key={key} className="flex flex-col gap-1">
                             <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                              {key.replace(/([A-Z])/g, " $1").trim()}
+                              {translateFieldName(key)}
                             </span>
                             <span className="text-sm text-card-foreground">{String(value)}</span>
                           </div>

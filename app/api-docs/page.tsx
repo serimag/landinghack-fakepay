@@ -6,9 +6,138 @@ import { Button } from "@/components/ui/button"
 import { Navbar } from "@/components/navbar"
 import { Copy, Check, Code, FileText, Shield, Database } from "lucide-react"
 
+const translations = {
+  es: {
+    title: "Documentación",
+    titleAccent: "API",
+    subtitle: "Integra la verificación de nóminas en tu aplicación mediante nuestra API REST",
+    quickStart: {
+      title: "Quick Start",
+      endpoint: "Endpoint",
+      auth: "Autenticación",
+      authDesc: "Incluye tu API key en el header Authorization:",
+      authNote: "Contacta con el administrador para obtener tu API key",
+    },
+    request: {
+      title: "Request",
+      headers: "Headers",
+      body: "Body (multipart/form-data)",
+      headerName: "Header",
+      headerValue: "Valor",
+      headerRequired: "Requerido",
+      yes: "Sí",
+      fieldName: "Campo",
+      fieldType: "Tipo",
+      fieldDesc: "Descripción",
+      fileDesc: "Archivo PDF, PNG o JPG de la nómina (max 10MB)",
+    },
+    response: {
+      title: "Response",
+      exampleTitle: "Ejemplo de respuesta exitosa",
+      copied: "Copiado",
+      copy: "Copiar",
+      fields: "Campos de respuesta",
+      fieldName: "Campo",
+      fieldType: "Tipo",
+      fieldDesc: "Descripción",
+      successDesc: "Indica si la verificación fue exitosa",
+      statusDesc: 'Estado: "valid", "invalid", "fraudulent"',
+      docTypeDesc: "Tipo de documento detectado",
+      aiGenDesc: "Si el documento fue generado/modificado por IA",
+      aiConfDesc: "Confianza de detección de IA (0-1)",
+      extractedDesc: "Datos extraídos de la nómina",
+      validationsDesc: "Lista de validaciones realizadas",
+      timestampDesc: "Fecha y hora de la verificación (ISO 8601)",
+    },
+    examples: {
+      title: "Ejemplos de Código",
+    },
+    errors: {
+      title: "Códigos de Error",
+      code: "Código",
+      description: "Descripción",
+      error400: "Bad Request - Archivo no proporcionado o formato inválido",
+      error401: "Unauthorized - API key inválida o ausente",
+      error413: "Payload Too Large - Archivo mayor a 10MB",
+      error500: "Internal Server Error - Error del servidor",
+    },
+    limits: {
+      title: "Límites de Uso",
+      rate: "Máximo 100 peticiones por minuto por API key",
+      size: "Tamaño máximo de archivo: 10MB",
+      formats: "Formatos soportados: PDF, PNG, JPG, JPEG",
+      timeout: "Timeout de petición: 60 segundos",
+    },
+  },
+  en: {
+    title: "API",
+    titleAccent: "Documentation",
+    subtitle: "Integrate payroll verification into your application using our REST API",
+    quickStart: {
+      title: "Quick Start",
+      endpoint: "Endpoint",
+      auth: "Authentication",
+      authDesc: "Include your API key in the Authorization header:",
+      authNote: "Contact the administrator to obtain your API key",
+    },
+    request: {
+      title: "Request",
+      headers: "Headers",
+      body: "Body (multipart/form-data)",
+      headerName: "Header",
+      headerValue: "Value",
+      headerRequired: "Required",
+      yes: "Yes",
+      fieldName: "Field",
+      fieldType: "Type",
+      fieldDesc: "Description",
+      fileDesc: "PDF, PNG or JPG file of the payslip (max 10MB)",
+    },
+    response: {
+      title: "Response",
+      exampleTitle: "Successful response example",
+      copied: "Copied",
+      copy: "Copy",
+      fields: "Response fields",
+      fieldName: "Field",
+      fieldType: "Type",
+      fieldDesc: "Description",
+      successDesc: "Indicates if the verification was successful",
+      statusDesc: 'Status: "valid", "invalid", "fraudulent"',
+      docTypeDesc: "Detected document type",
+      aiGenDesc: "Whether the document was generated/modified by AI",
+      aiConfDesc: "AI detection confidence (0-1)",
+      extractedDesc: "Extracted payslip data",
+      validationsDesc: "List of performed validations",
+      timestampDesc: "Verification date and time (ISO 8601)",
+    },
+    examples: {
+      title: "Code Examples",
+    },
+    errors: {
+      title: "Error Codes",
+      code: "Code",
+      description: "Description",
+      error400: "Bad Request - File not provided or invalid format",
+      error401: "Unauthorized - Invalid or missing API key",
+      error413: "Payload Too Large - File larger than 10MB",
+      error500: "Internal Server Error - Server error",
+    },
+    limits: {
+      title: "Usage Limits",
+      rate: "Maximum 100 requests per minute per API key",
+      size: "Maximum file size: 10MB",
+      formats: "Supported formats: PDF, PNG, JPG, JPEG",
+      timeout: "Request timeout: 60 seconds",
+    },
+  },
+}
+
 export default function APIDocsPage() {
   const [language, setLanguage] = useState<"es" | "en">("es")
   const [copiedSection, setCopiedSection] = useState<string | null>(null)
+
+  const t = translations[language]
 
   const copyToClipboard = (text: string, section: string) => {
     navigator.clipboard.writeText(text)
@@ -98,11 +227,9 @@ console.log('AI Generated:', result.aiGenerated);`
       <div className="mx-auto max-w-5xl px-4 py-12">
         <div className="mb-8">
           <h1 className="mb-4 font-mono text-4xl font-bold text-foreground">
-            API <span className="text-primary">Documentation</span>
+            {t.title} <span className="text-primary">{t.titleAccent}</span>
           </h1>
-          <p className="text-lg text-muted-foreground">
-            Integra la verificación de nóminas en tu aplicación mediante nuestra API REST
-          </p>
+          <p className="text-lg text-muted-foreground">{t.subtitle}</p>
         </div>
 
         {/* Quick Start */}
@@ -111,24 +238,22 @@ console.log('AI Generated:', result.aiGenerated);`
             <div className="rounded-lg bg-primary/10 p-2">
               <Code className="h-5 w-5 text-primary" />
             </div>
-            <h2 className="text-2xl font-semibold text-card-foreground">Quick Start</h2>
+            <h2 className="text-2xl font-semibold text-card-foreground">{t.quickStart.title}</h2>
           </div>
           <div className="space-y-4">
             <div>
-              <h3 className="mb-2 font-semibold text-card-foreground">Endpoint</h3>
+              <h3 className="mb-2 font-semibold text-card-foreground">{t.quickStart.endpoint}</h3>
               <div className="rounded-lg bg-secondary/50 p-4 font-mono text-sm">
                 <span className="text-green-500">POST</span> https://payshit.ai/api/v1/verify
               </div>
             </div>
             <div>
-              <h3 className="mb-2 font-semibold text-card-foreground">Autenticación</h3>
-              <p className="mb-2 text-sm text-muted-foreground">Incluye tu API key en el header Authorization:</p>
+              <h3 className="mb-2 font-semibold text-card-foreground">{t.quickStart.auth}</h3>
+              <p className="mb-2 text-sm text-muted-foreground">{t.quickStart.authDesc}</p>
               <div className="rounded-lg bg-secondary/50 p-4 font-mono text-sm">
                 Authorization: Bearer your_api_key_here
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Contacta con el administrador para obtener tu API key
-              </p>
+              <p className="mt-2 text-xs text-muted-foreground">{t.quickStart.authNote}</p>
             </div>
           </div>
         </Card>
@@ -139,51 +264,51 @@ console.log('AI Generated:', result.aiGenerated);`
             <div className="rounded-lg bg-primary/10 p-2">
               <FileText className="h-5 w-5 text-primary" />
             </div>
-            <h2 className="text-2xl font-semibold text-card-foreground">Request</h2>
+            <h2 className="text-2xl font-semibold text-card-foreground">{t.request.title}</h2>
           </div>
           <div className="space-y-4">
             <div>
-              <h3 className="mb-2 font-semibold text-card-foreground">Headers</h3>
+              <h3 className="mb-2 font-semibold text-card-foreground">{t.request.headers}</h3>
               <div className="overflow-x-auto rounded-lg bg-secondary/50 p-4">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="pb-2 text-left font-semibold">Header</th>
-                      <th className="pb-2 text-left font-semibold">Valor</th>
-                      <th className="pb-2 text-left font-semibold">Requerido</th>
+                      <th className="pb-2 text-left font-semibold">{t.request.headerName}</th>
+                      <th className="pb-2 text-left font-semibold">{t.request.headerValue}</th>
+                      <th className="pb-2 text-left font-semibold">{t.request.headerRequired}</th>
                     </tr>
                   </thead>
                   <tbody className="font-mono">
                     <tr className="border-b border-border/50">
                       <td className="py-2">Authorization</td>
                       <td className="py-2 text-muted-foreground">Bearer your_api_key_here</td>
-                      <td className="py-2 text-green-500">Sí</td>
+                      <td className="py-2 text-green-500">{t.request.yes}</td>
                     </tr>
                     <tr>
                       <td className="py-2">Content-Type</td>
                       <td className="py-2 text-muted-foreground">multipart/form-data</td>
-                      <td className="py-2 text-green-500">Sí</td>
+                      <td className="py-2 text-green-500">{t.request.yes}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
             </div>
             <div>
-              <h3 className="mb-2 font-semibold text-card-foreground">Body (multipart/form-data)</h3>
+              <h3 className="mb-2 font-semibold text-card-foreground">{t.request.body}</h3>
               <div className="overflow-x-auto rounded-lg bg-secondary/50 p-4">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="pb-2 text-left font-semibold">Campo</th>
-                      <th className="pb-2 text-left font-semibold">Tipo</th>
-                      <th className="pb-2 text-left font-semibold">Descripción</th>
+                      <th className="pb-2 text-left font-semibold">{t.request.fieldName}</th>
+                      <th className="pb-2 text-left font-semibold">{t.request.fieldType}</th>
+                      <th className="pb-2 text-left font-semibold">{t.request.fieldDesc}</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
                       <td className="py-2 font-mono">file</td>
                       <td className="py-2 text-muted-foreground">File</td>
-                      <td className="py-2 text-muted-foreground">Archivo PDF, PNG o JPG de la nómina (max 10MB)</td>
+                      <td className="py-2 text-muted-foreground">{t.request.fileDesc}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -198,12 +323,12 @@ console.log('AI Generated:', result.aiGenerated);`
             <div className="rounded-lg bg-primary/10 p-2">
               <Database className="h-5 w-5 text-primary" />
             </div>
-            <h2 className="text-2xl font-semibold text-card-foreground">Response</h2>
+            <h2 className="text-2xl font-semibold text-card-foreground">{t.response.title}</h2>
           </div>
           <div className="space-y-4">
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <h3 className="font-semibold text-card-foreground">Ejemplo de respuesta exitosa</h3>
+                <h3 className="font-semibold text-card-foreground">{t.response.exampleTitle}</h3>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -213,12 +338,12 @@ console.log('AI Generated:', result.aiGenerated);`
                   {copiedSection === "response" ? (
                     <>
                       <Check className="h-4 w-4" />
-                      Copiado
+                      {t.response.copied}
                     </>
                   ) : (
                     <>
                       <Copy className="h-4 w-4" />
-                      Copiar
+                      {t.response.copy}
                     </>
                   )}
                 </Button>
@@ -230,56 +355,56 @@ console.log('AI Generated:', result.aiGenerated);`
               </div>
             </div>
             <div>
-              <h3 className="mb-2 font-semibold text-card-foreground">Campos de respuesta</h3>
+              <h3 className="mb-2 font-semibold text-card-foreground">{t.response.fields}</h3>
               <div className="overflow-x-auto rounded-lg bg-secondary/50 p-4">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="pb-2 text-left font-semibold">Campo</th>
-                      <th className="pb-2 text-left font-semibold">Tipo</th>
-                      <th className="pb-2 text-left font-semibold">Descripción</th>
+                      <th className="pb-2 text-left font-semibold">{t.response.fieldName}</th>
+                      <th className="pb-2 text-left font-semibold">{t.response.fieldType}</th>
+                      <th className="pb-2 text-left font-semibold">{t.response.fieldDesc}</th>
                     </tr>
                   </thead>
                   <tbody className="text-xs">
                     <tr className="border-b border-border/50">
                       <td className="py-2 font-mono">success</td>
                       <td className="py-2 text-muted-foreground">boolean</td>
-                      <td className="py-2 text-muted-foreground">Indica si la verificación fue exitosa</td>
+                      <td className="py-2 text-muted-foreground">{t.response.successDesc}</td>
                     </tr>
                     <tr className="border-b border-border/50">
                       <td className="py-2 font-mono">status</td>
                       <td className="py-2 text-muted-foreground">string</td>
-                      <td className="py-2 text-muted-foreground">Estado: "valid", "invalid", "fraudulent"</td>
+                      <td className="py-2 text-muted-foreground">{t.response.statusDesc}</td>
                     </tr>
                     <tr className="border-b border-border/50">
                       <td className="py-2 font-mono">documentType</td>
                       <td className="py-2 text-muted-foreground">string</td>
-                      <td className="py-2 text-muted-foreground">Tipo de documento detectado</td>
+                      <td className="py-2 text-muted-foreground">{t.response.docTypeDesc}</td>
                     </tr>
                     <tr className="border-b border-border/50">
                       <td className="py-2 font-mono">aiGenerated</td>
                       <td className="py-2 text-muted-foreground">boolean</td>
-                      <td className="py-2 text-muted-foreground">Si el documento fue generado/modificado por IA</td>
+                      <td className="py-2 text-muted-foreground">{t.response.aiGenDesc}</td>
                     </tr>
                     <tr className="border-b border-border/50">
                       <td className="py-2 font-mono">aiConfidence</td>
                       <td className="py-2 text-muted-foreground">number</td>
-                      <td className="py-2 text-muted-foreground">Confianza de detección de IA (0-1)</td>
+                      <td className="py-2 text-muted-foreground">{t.response.aiConfDesc}</td>
                     </tr>
                     <tr className="border-b border-border/50">
                       <td className="py-2 font-mono">extractedData</td>
                       <td className="py-2 text-muted-foreground">object</td>
-                      <td className="py-2 text-muted-foreground">Datos extraídos de la nómina</td>
+                      <td className="py-2 text-muted-foreground">{t.response.extractedDesc}</td>
                     </tr>
                     <tr className="border-b border-border/50">
                       <td className="py-2 font-mono">validations</td>
                       <td className="py-2 text-muted-foreground">array</td>
-                      <td className="py-2 text-muted-foreground">Lista de validaciones realizadas</td>
+                      <td className="py-2 text-muted-foreground">{t.response.validationsDesc}</td>
                     </tr>
                     <tr>
                       <td className="py-2 font-mono">timestamp</td>
                       <td className="py-2 text-muted-foreground">string</td>
-                      <td className="py-2 text-muted-foreground">Fecha y hora de la verificación (ISO 8601)</td>
+                      <td className="py-2 text-muted-foreground">{t.response.timestampDesc}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -294,7 +419,7 @@ console.log('AI Generated:', result.aiGenerated);`
             <div className="rounded-lg bg-primary/10 p-2">
               <Shield className="h-5 w-5 text-primary" />
             </div>
-            <h2 className="text-2xl font-semibold text-card-foreground">Ejemplos de Código</h2>
+            <h2 className="text-2xl font-semibold text-card-foreground">{t.examples.title}</h2>
           </div>
           <div className="space-y-6">
             {/* cURL */}
@@ -310,12 +435,12 @@ console.log('AI Generated:', result.aiGenerated);`
                   {copiedSection === "curl" ? (
                     <>
                       <Check className="h-4 w-4" />
-                      Copiado
+                      {t.response.copied}
                     </>
                   ) : (
                     <>
                       <Copy className="h-4 w-4" />
-                      Copiar
+                      {t.response.copy}
                     </>
                   )}
                 </Button>
@@ -340,12 +465,12 @@ console.log('AI Generated:', result.aiGenerated);`
                   {copiedSection === "python" ? (
                     <>
                       <Check className="h-4 w-4" />
-                      Copiado
+                      {t.response.copied}
                     </>
                   ) : (
                     <>
                       <Copy className="h-4 w-4" />
-                      Copiar
+                      {t.response.copy}
                     </>
                   )}
                 </Button>
@@ -370,12 +495,12 @@ console.log('AI Generated:', result.aiGenerated);`
                   {copiedSection === "node" ? (
                     <>
                       <Check className="h-4 w-4" />
-                      Copiado
+                      {t.response.copied}
                     </>
                   ) : (
                     <>
                       <Copy className="h-4 w-4" />
-                      Copiar
+                      {t.response.copy}
                     </>
                   )}
                 </Button>
@@ -391,33 +516,31 @@ console.log('AI Generated:', result.aiGenerated);`
 
         {/* Error Codes */}
         <Card className="mb-6 border border-border bg-card p-6">
-          <h2 className="mb-4 text-2xl font-semibold text-card-foreground">Códigos de Error</h2>
+          <h2 className="mb-4 text-2xl font-semibold text-card-foreground">{t.errors.title}</h2>
           <div className="overflow-x-auto rounded-lg bg-secondary/50 p-4">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="pb-2 text-left font-semibold">Código</th>
-                  <th className="pb-2 text-left font-semibold">Descripción</th>
+                  <th className="pb-2 text-left font-semibold">{t.errors.code}</th>
+                  <th className="pb-2 text-left font-semibold">{t.errors.description}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="border-b border-border/50">
                   <td className="py-2 font-mono text-red-500">400</td>
-                  <td className="py-2 text-muted-foreground">
-                    Bad Request - Archivo no proporcionado o formato inválido
-                  </td>
+                  <td className="py-2 text-muted-foreground">{t.errors.error400}</td>
                 </tr>
                 <tr className="border-b border-border/50">
                   <td className="py-2 font-mono text-red-500">401</td>
-                  <td className="py-2 text-muted-foreground">Unauthorized - API key inválida o ausente</td>
+                  <td className="py-2 text-muted-foreground">{t.errors.error401}</td>
                 </tr>
                 <tr className="border-b border-border/50">
                   <td className="py-2 font-mono text-red-500">413</td>
-                  <td className="py-2 text-muted-foreground">Payload Too Large - Archivo mayor a 10MB</td>
+                  <td className="py-2 text-muted-foreground">{t.errors.error413}</td>
                 </tr>
                 <tr>
                   <td className="py-2 font-mono text-red-500">500</td>
-                  <td className="py-2 text-muted-foreground">Internal Server Error - Error del servidor</td>
+                  <td className="py-2 text-muted-foreground">{t.errors.error500}</td>
                 </tr>
               </tbody>
             </table>
@@ -426,12 +549,12 @@ console.log('AI Generated:', result.aiGenerated);`
 
         {/* Rate Limits */}
         <Card className="border border-border bg-card p-6">
-          <h2 className="mb-4 text-2xl font-semibold text-card-foreground">Límites de Uso</h2>
+          <h2 className="mb-4 text-2xl font-semibold text-card-foreground">{t.limits.title}</h2>
           <div className="space-y-2 text-sm text-muted-foreground">
-            <p>• Máximo 100 peticiones por minuto por API key</p>
-            <p>• Tamaño máximo de archivo: 10MB</p>
-            <p>• Formatos soportados: PDF, PNG, JPG, JPEG</p>
-            <p>• Timeout de petición: 60 segundos</p>
+            <p>• {t.limits.rate}</p>
+            <p>• {t.limits.size}</p>
+            <p>• {t.limits.formats}</p>
+            <p>• {t.limits.timeout}</p>
           </div>
         </Card>
       </div>

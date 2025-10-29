@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Sun, Moon } from "lucide-react"
 import Link from "next/link"
 import { useTheme } from "next-themes"
+import { usePathname } from "next/navigation"
 
 interface NavbarProps {
   language: "es" | "en"
@@ -24,13 +25,14 @@ const translations = {
 export function Navbar({ language, onLanguageChange }: NavbarProps) {
   const { theme, setTheme } = useTheme()
   const t = translations[language]
+  const pathname = usePathname()
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark")
   }
 
   return (
-    <nav className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
@@ -40,12 +42,19 @@ export function Navbar({ language, onLanguageChange }: NavbarProps) {
           </div>
 
           <div className="hidden md:flex md:items-center md:gap-8">
-            <Link href="/" className="text-sm font-medium text-foreground transition-colors hover:text-primary">
+            <Link
+              href="/"
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                pathname === "/" ? "text-foreground" : "text-muted-foreground"
+              }`}
+            >
               {t.home}
             </Link>
             <Link
               href="/api-docs"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                pathname === "/api-docs" ? "text-foreground" : "text-muted-foreground"
+              }`}
             >
               {t.api}
             </Link>
