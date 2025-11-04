@@ -1,102 +1,102 @@
-# payshit.ai - Verificación de Nóminas
+# payshit.ai - Payroll Verification
 
-Sistema de validación automática de nóminas españolas utilizando IA para detectar fraudes y verificar autenticidad.
+Automatic validation system for Spanish payslips using AI to detect fraud and verify authenticity.
 
-## Características
+## Features
 
-- 📄 **Clasificación de Documentos**: Identifica automáticamente el tipo de documento usando LandingAI
-- 🤖 **Detección de IA**: Detecta si el documento ha sido generado o manipulado por IA usando AIorNOT
-- 📊 **Extracción de Datos**: Extrae información clave de las nóminas
-- ✅ **Validación Automática**: Verifica fechas, formatos de NIF/CIF, y cálculos de nómina
-- 🔌 **API REST**: Integra la verificación en tus aplicaciones mediante API
+- 📄 **Document Classification**: Automatically identifies document type using LandingAI
+- 🤖 **AI Detection**: Detects if the document has been generated or manipulated by AI using AIorNOT
+- 📊 **Data Extraction**: Extracts key information from payslips
+- ✅ **Automatic Validation**: Verifies dates, NIF/CIF formats, and payroll calculations
+- 🔌 **REST API**: Integrate verification into your applications via API
 
-## Configuración
+## Configuration
 
-### Variables de Entorno
+### Environment Variables
 
-Crea un archivo `.env.local` con las siguientes variables:
+Create a `.env.local` file with the following variables:
 
 \`\`\`bash
 # LandingAI Configuration
-LANDINGAI_API_KEY=tu_api_key_de_landingai
-LANDINGAI_ENDPOINT_ID=tu_endpoint_id
+LANDINGAI_API_KEY=your_landingai_api_key
+LANDINGAI_ENDPOINT_ID=your_endpoint_id
 
 # AIorNOT Configuration
-AIORNOT_API_KEY=tu_api_key_de_aiornot
+AIORNOT_API_KEY=your_aiornot_api_key
 
 # API REST Configuration
-PAYROLL_API_KEY=tu_clave_secreta_para_api_rest
+PAYROLL_API_KEY=your_secret_key_for_rest_api
 
-# Web Interface Password (opcional, por defecto usa PAYROLL_API_KEY)
-WEB_PASSWORD=tu_contraseña_para_acceso_web
+# Web Interface Password (optional, defaults to PAYROLL_API_KEY)
+WEB_PASSWORD=your_password_for_web_access
 \`\`\`
 
-### Obtener API Keys
+### Getting API Keys
 
-1. **LandingAI**: Regístrate en [landing.ai](https://landing.ai) y crea un endpoint de clasificación de documentos
-2. **AIorNOT**: Obtén tu API key en [aiornot.com](https://aiornot.com)
-3. **PAYROLL_API_KEY**: Genera una clave segura para proteger tu API REST
-4. **WEB_PASSWORD**: Define una contraseña para el acceso web (opcional)
+1. **LandingAI**: Sign up at [landing.ai](https://landing.ai) and create a document classification endpoint
+2. **AIorNOT**: Get your API key at [aiornot.com](https://aiornot.com)
+3. **PAYROLL_API_KEY**: Generate a secure key to protect your REST API
+4. **WEB_PASSWORD**: Define a password for web access (optional)
 
-## Instalación
+## Installation
 
 \`\`\`bash
-# Instalar dependencias
+# Install dependencies
 npm install
 
-# Ejecutar en desarrollo
+# Run in development
 npm run dev
 
-# Construir para producción
+# Build for production
 npm run build
 \`\`\`
 
-## Uso
+## Usage
 
-### Interfaz Web
+### Web Interface
 
-1. Accede a la aplicación e introduce la contraseña
-2. Arrastra o selecciona un archivo de nómina (PDF, PNG, JPG)
-3. Haz clic en "Verificar Nómina"
-4. El sistema procesará el documento en 4 pasos:
-   - Clasificación del documento
-   - Detección de manipulación por IA
-   - Extracción de datos
-   - Validación de información
-5. Revisa los resultados y el estado de verificación
+1. Access the application and enter the password
+2. Drag or select a payslip file (PDF, PNG, JPG)
+3. Click "Verify Payslip"
+4. The system will process the document in 4 steps:
+   - Document classification
+   - AI manipulation detection
+   - Data extraction
+   - Information validation
+5. Review the results and verification status
 
-### API REST
+### REST API
 
-Consulta la documentación completa de la API en `/api-docs` o visita el botón "API" en la interfaz web.
+Check the complete API documentation at `/api-docs` or visit the "API" button in the web interface.
 
-**Ejemplo básico:**
+**Basic example:**
 
 \`\`\`bash
 curl -X POST https://payshit.ai/api/v1/verify \
-  -H "Authorization: Bearer tu_api_key" \
-  -F "file=@nomina.pdf"
+  -H "Authorization: Bearer your_api_key" \
+  -F "file=@payslip.pdf"
 \`\`\`
 
-## Seguridad
+## Security
 
-- Las API keys de LandingAI y AIorNOT se almacenan como variables de entorno y nunca se exponen al cliente
-- La API REST requiere autenticación mediante Bearer token
-- Todas las contraseñas y claves deben configurarse mediante variables de entorno
-- No incluyas archivos `.env.local` en el control de versiones
+- LandingAI and AIorNOT API keys are stored as environment variables and never exposed to the client
+- REST API requires authentication via Bearer token
+- All passwords and keys must be configured through environment variables
+- Do not include `.env.local` files in version control
 
-## Tecnologías
+## Technologies
 
-- **Next.js 16**: Framework de React con App Router
-- **TypeScript**: Tipado estático
-- **Tailwind CSS v4**: Estilos
-- **shadcn/ui**: Componentes de UI
-- **LandingAI**: Clasificación y extracción de documentos
-- **AIorNOT**: Detección de contenido generado por IA
+- **Next.js 16**: React framework with App Router
+- **TypeScript**: Static typing
+- **Tailwind CSS v4**: Styling
+- **shadcn/ui**: UI components
+- **LandingAI**: Document classification and extraction
+- **AIorNOT**: AI-generated content detection
 
-## Modo de Desarrollo
+## Development Mode
 
-Si no tienes las API keys configuradas, el sistema funcionará en modo de desarrollo con datos simulados para que puedas probar la interfaz.
+If you don't have the API keys configured, the system will work in development mode with simulated data so you can test the interface.
 
-## Licencia
+## License
 
 MIT
