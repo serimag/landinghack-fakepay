@@ -35,7 +35,7 @@ PAYROLL_API_KEY=your_secret_key_for_rest_api
 
 ## Installation
 
-\`\`\`sh
+```bash
 # Install dependencies
 npm install
 
@@ -44,7 +44,7 @@ npm run dev
 
 # Build for production
 npm run build
-\`\`\`
+```
 
 ## Usage
 
@@ -66,11 +66,11 @@ Check the complete API documentation at `/api-docs` or visit the "API" button in
 
 **Basic example:**
 
-\`\`\`sh
+```bash
 curl -X POST https://payshit.ai/api/v1/verify \
   -H "Authorization: Bearer your_api_key" \
   -F "file=@payslip.pdf"
-\`\`\`
+```
 
 ## Security
 
