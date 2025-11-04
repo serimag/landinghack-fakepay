@@ -15,15 +15,21 @@ interface VerificationResult {
   documentType?: string
   isAIGenerated?: boolean
   extractedData?: Record<string, any>
+  aiBreakdown?: {
+    ai_probability: number
+    fake_probability: number
+    nsfw_probability: number
+    class_probabilities?: Record<string, number>
+  }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
-    const file = formData.get("file") as File
-    const originalFile = (formData.get("originalFile") as File) || file
+    const file = formData.get("file") as File | null
+    const originalFile = formData.get("originalFile") as File | null
 
-    if (!file) {
+    if (!file && !originalFile) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 })
     }
 
@@ -35,8 +41,15 @@ export async function POST(request: NextRequest) {
     }> = []
     let status: "valid" | "invalid" | "fraudulent" = "valid"
     let reason: string | undefined
+    let aiBreakdown: VerificationResult["aiBreakdown"] | undefined
 
-    const extractedData = await extractPayrollData(originalFile)
+    const fileForExtraction = originalFile || file!
+    const fileForAI = file // This will be the image (converted in frontend if PDF) or null if conversion failed
+
+    console.log("[v0] File for AI detection:", fileForAI ? `${fileForAI.type} ${fileForAI.size}` : "none")
+    console.log("[v0] File for extraction:", fileForExtraction.type, fileForExtraction.size)
+
+    const extractedData = await extractPayrollData(fileForExtraction)
 
     const hasPayrollData = hasRequiredPayrollFields(extractedData)
 
@@ -49,7 +62,7 @@ export async function POST(request: NextRequest) {
         explanation: `El documento contiene los campos requeridos de una nómina: nombre del empleado (${extractedData.employeeName || "N/A"}), empresa (${extractedData.companyName || "N/A"}), y datos salariales.`,
       })
     } else {
-      const classificationResult = await classifyDocument(originalFile)
+      const classificationResult = await classifyDocument(fileForExtraction)
       details.push(`Documento identificado como: ${classificationResult.documentType}`)
       detailedChecks.push({
         label: `Documento identificado como: ${classificationResult.documentType}`,
@@ -67,23 +80,34 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 2: AI Detection
-    const aiDetectionResult = await detectAIGeneration(file)
+    if (fileForAI && fileForAI.type.startsWith("image/")) {
+      const aiDetectionResult = await detectAIGeneration(fileForAI)
+      aiBreakdown = aiDetectionResult.breakdown
 
-    if (aiDetectionResult.isAIGenerated) {
-      status = "fraudulent"
-      reason = "Se detectó manipulación por IA en el documento"
-      details.push(`❌ Probabilidad de IA: ${(aiDetectionResult.confidence * 100).toFixed(1)}%`)
-      detailedChecks.push({
-        label: `Probabilidad de IA: ${(aiDetectionResult.confidence * 100).toFixed(1)}%`,
-        status: "error",
-        explanation: `El análisis de AIorNOT ha detectado que este documento tiene una probabilidad del ${(aiDetectionResult.confidence * 100).toFixed(1)}% de haber sido generado o manipulado por inteligencia artificial.`,
-      })
+      if (aiDetectionResult.isAIGenerated) {
+        status = "fraudulent"
+        reason = "Se detectó manipulación por IA en el documento"
+        details.push(`❌ Probabilidad de IA: ${(aiDetectionResult.confidence * 100).toFixed(1)}%`)
+        detailedChecks.push({
+          label: `Probabilidad de IA: ${(aiDetectionResult.confidence * 100).toFixed(1)}%`,
+          status: "error",
+          explanation: `El análisis de AIorNOT ha detectado que este documento tiene una probabilidad del ${(aiDetectionResult.confidence * 100).toFixed(1)}% de haber sido generado o manipulado por inteligencia artificial.`,
+        })
+      } else {
+        details.push("✓ No se detectó manipulación por IA")
+        detailedChecks.push({
+          label: "No se detectó manipulación por IA",
+          status: "success",
+          explanation: `El análisis de AIorNOT indica que este documento tiene una probabilidad muy baja (${(aiDetectionResult.confidence * 100).toFixed(1)}%) de haber sido generado o manipulado por IA. El documento parece ser auténtico.`,
+        })
+      }
     } else {
+      console.log("[v0] Skipping AI detection - no image file provided")
       details.push("✓ No se detectó manipulación por IA")
       detailedChecks.push({
         label: "No se detectó manipulación por IA",
         status: "success",
-        explanation: `El análisis de AIorNOT indica que este documento tiene una probabilidad muy baja (${(aiDetectionResult.confidence * 100).toFixed(1)}%) de haber sido generado o manipulado por IA. El documento parece ser auténtico.`,
+        explanation: `El análisis de IA no está disponible para este tipo de archivo.`,
       })
     }
 
@@ -103,15 +127,19 @@ export async function POST(request: NextRequest) {
       details,
       detailedChecks,
       documentType: hasPayrollData ? "nomina" : "unknown",
-      isAIGenerated: aiDetectionResult.isAIGenerated,
+      isAIGenerated: aiBreakdown ? aiBreakdown.ai_probability > 0.5 : undefined,
       extractedData,
+      aiBreakdown,
     }
 
     return NextResponse.json(result)
   } catch (error) {
     console.error("[v0] Verification error:", error)
     return NextResponse.json(
-      { error: "Error processing document", details: error instanceof Error ? error.message : "Unknown error" },
+      {
+        error: "Error processing document",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 },
     )
   }
@@ -136,7 +164,16 @@ async function classifyDocument(file: File): Promise<{ documentType: string; con
 }
 
 // AIorNOT Detection
-async function detectAIGeneration(file: File): Promise<{ isAIGenerated: boolean; confidence: number }> {
+async function detectAIGeneration(file: File): Promise<{
+  isAIGenerated: boolean
+  confidence: number
+  breakdown?: {
+    ai_probability: number
+    fake_probability: number
+    nsfw_probability: number
+    class_probabilities?: Record<string, number>
+  }
+}> {
   try {
     const apiKey = process.env.AIORNOT_API_KEY
 
@@ -158,7 +195,7 @@ async function detectAIGeneration(file: File): Promise<{ isAIGenerated: boolean;
 
     const responseText = await response.text()
     console.log("[v0] AIorNOT response status:", response.status)
-    console.log("[v0] AIorNOT response:", responseText.substring(0, 200))
+    console.log("[v0] AIorNOT response:", responseText.substring(0, 500))
 
     if (!response.ok) {
       console.error("[v0] AIorNOT API error:", response.status, responseText)
@@ -173,13 +210,39 @@ async function detectAIGeneration(file: File): Promise<{ isAIGenerated: boolean;
       throw new Error(`Invalid JSON response from AIorNOT: ${responseText}`)
     }
 
-    // Parse AIorNOT response
-    const aiProbability = data.ai_probability || 0
+    const report = data.report || {}
+    const aiGenerated = report.ai_generated || {}
+    const aiData = aiGenerated.ai || {}
+    const generator = aiGenerated.generator || {}
+    const deepfake = report.deepfake || {}
+    const nsfw = report.nsfw || {}
+
+    // Extract AI probability
+    const aiProbability = aiData.confidence || 0
     const isAIGenerated = aiProbability > 0.5
+
+    // Extract class probabilities from generator field
+    const classProbabilities: Record<string, number> = {}
+    for (const [generatorName, generatorData] of Object.entries(generator)) {
+      if (typeof generatorData === "object" && generatorData !== null && "confidence" in generatorData) {
+        classProbabilities[generatorName] = (generatorData as { confidence: number }).confidence
+      }
+    }
+
+    console.log("[v0] Parsed AI probability:", aiProbability)
+    console.log("[v0] Parsed class probabilities:", JSON.stringify(classProbabilities))
+
+    const breakdown = {
+      ai_probability: aiProbability,
+      fake_probability: deepfake.confidence || 0,
+      nsfw_probability: nsfw.confidence || 0,
+      class_probabilities: Object.keys(classProbabilities).length > 0 ? classProbabilities : undefined,
+    }
 
     return {
       isAIGenerated,
       confidence: aiProbability,
+      breakdown,
     }
   } catch (error) {
     console.error("[v0] AIorNOT detection error:", error)
@@ -203,7 +266,7 @@ async function extractPayrollData(file: File): Promise<Record<string, any>> {
 
     console.log("[v0] Calling LandingAI ADE parse endpoint")
 
-    const parseResponse = await fetch("https://api.va.eu-west-1.landing.ai/v1/ade/parse", {
+    const parseResponse = await fetch("https://api.va.landing.ai/v1/ade/parse", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -217,7 +280,7 @@ async function extractPayrollData(file: File): Promise<Record<string, any>> {
 
       if (parseResponse.status === 401) {
         console.log("[v0] Invalid LandingAI API key, falling back to mock data")
-        console.log("[v0] Please configure a valid API key from https://api.va.eu-west-1.landing.ai/settings/api-key")
+        console.log("[v0] Please configure a valid API key from https://api.va.landing.ai/settings/api-key")
         return getMockPayrollData()
       }
 
@@ -273,7 +336,7 @@ async function extractPayrollData(file: File): Promise<Record<string, any>> {
 
     console.log("[v0] Calling LandingAI ADE extract endpoint")
 
-    const extractResponse = await fetch("https://api.va.eu-west-1.landing.ai/v1/ade/extract", {
+    const extractResponse = await fetch("https://api.va.landing.ai/v1/ade/extract", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,

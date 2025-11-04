@@ -13,7 +13,6 @@ import {
   FileSearch,
   ChevronDown,
   Info,
-  Lock,
   Eye,
   X,
 } from "lucide-react"
@@ -23,8 +22,8 @@ import { Progress } from "@/components/ui/progress"
 import { Navbar } from "@/components/navbar"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Input } from "@/components/ui/input"
 import Link from "next/link"
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip as RechartsTooltip } from "recharts"
 
 type VerificationStep = "upload" | "classifying" | "ai-detection" | "extracting" | "validating" | "complete"
 type VerificationStatus = "idle" | "processing" | "success" | "error"
@@ -41,6 +40,12 @@ interface VerificationResult {
   documentType?: string
   isAIGenerated?: boolean
   extractedData?: Record<string, any>
+  aiBreakdown?: {
+    ai_probability: number
+    fake_probability: number
+    nsfw_probability: number
+    class_probabilities?: Record<string, number>
+  }
 }
 
 const translations = {
@@ -84,6 +89,9 @@ const translations = {
       extractedTitle: "Datos Extraídos",
       verifyAnother: "Verificar Otra Nómina",
       viewDocument: "Ver Documento",
+      aiBreakdownTitle: "Análisis de IA",
+      aiClass: "Clase",
+      aiLikelihood: "Probabilidad",
     },
     checks: {
       labels: {
@@ -162,6 +170,9 @@ const translations = {
       extractedTitle: "Extracted Data",
       verifyAnother: "Verify Another Payslip",
       viewDocument: "View Document",
+      aiBreakdownTitle: "AI Analysis",
+      aiClass: "Class",
+      aiLikelihood: "Likeliness",
     },
     checks: {
       labels: {
@@ -202,51 +213,39 @@ const translations = {
   },
 }
 
-async function convertPdfToImage(file: File): Promise<File> {
-  const pdfjsLib = await import("pdfjs-dist")
+const AI_GENERATOR_COLORS: Record<string, string> = {
+  stable_diffusion: "#3b82f6", // blue-500
+  midjourney: "#8b5cf6", // violet-500
+  dall_e: "#f59e0b", // amber-500
+  gan: "#eab308", // yellow-500
+  flux: "#f97316", // orange-500
+  four_o: "#06b6d4", // cyan-500
+  adobe_firefly: "#a855f7", // purple-500
+  this_person_does_not_exist: "#ec4899", // pink-500
+  ai: "#ef4444", // red-500 for AI
+  human: "#22c55e", // green-500 for Human
+}
 
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`
-
-  const arrayBuffer = await file.arrayBuffer()
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
-  const page = await pdf.getPage(1)
-
-  const viewport = page.getViewport({ scale: 2.0 })
-  const canvas = document.createElement("canvas")
-  const context = canvas.getContext("2d")
-
-  if (!context) {
-    throw new Error("Could not get canvas context")
+const formatGeneratorName = (name: string): string => {
+  // Special cases
+  const specialCases: Record<string, string> = {
+    dall_e: "DALL-E",
+    four_o: "GPT-4o",
+    this_person_does_not_exist: "This Person Does Not Exist",
+    adobe_firefly: "Adobe Firefly",
+    stable_diffusion: "Stable Diffusion",
+    midjourney: "Midjourney",
+    gan: "GAN",
+    flux: "Flux",
+    ai: "AI",
+    human: "Human",
   }
 
-  canvas.width = viewport.width
-  canvas.height = viewport.height
-
-  await page.render({
-    canvasContext: context,
-    viewport: viewport,
-  }).promise
-
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (blob) {
-        resolve(blob)
-      } else {
-        reject(new Error("Failed to convert canvas to blob"))
-      }
-    }, "image/png")
-  })
-
-  return new File([blob], file.name.replace(/\.pdf$/i, ".png"), { type: "image/png" })
+  return specialCases[name.toLowerCase()] || name.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
 }
 
 export default function PayrollVerificationPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [password, setPassword] = useState("")
-  const [authError, setAuthError] = useState("")
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
-
-  const [language, setLanguage] = useState<"es" | "en">("es")
+  const [language, setLanguage] = useState<"es" | "en">("en")
   const [file, setFile] = useState<File | null>(null)
   const [dragActive, setDragActive] = useState(false)
   const [currentStep, setCurrentStep] = useState<VerificationStep>("upload")
@@ -261,15 +260,10 @@ export default function PayrollVerificationPage() {
   const t = translations[language]
 
   useEffect(() => {
-    const authStatus = localStorage.getItem("payroll_authenticated")
-    if (authStatus === "true") {
-      setIsAuthenticated(true)
-    }
     const savedLanguage = localStorage.getItem("payroll_language") as "es" | "en" | null
     if (savedLanguage) {
       setLanguage(savedLanguage)
     }
-    setIsCheckingAuth(false)
   }, [])
 
   useEffect(() => {
@@ -303,24 +297,6 @@ export default function PayrollVerificationPage() {
         })
     }
   }, [])
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (password === process.env.NEXT_PUBLIC_WEB_PASSWORD || password === "ivuRTRu6jkzDYjjIHfQg") {
-      setIsAuthenticated(true)
-      localStorage.setItem("payroll_authenticated", "true")
-      setAuthError("")
-    } else {
-      setAuthError(language === "es" ? "Contraseña incorrecta" : "Incorrect password")
-    }
-  }
-
-  const handleLogout = () => {
-    setIsAuthenticated(false)
-    localStorage.removeItem("payroll_authenticated")
-    setPassword("")
-  }
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
@@ -368,23 +344,30 @@ export default function PayrollVerificationPage() {
     setCurrentStep("classifying")
 
     try {
-      let fileToSend = targetFile
-
-      if (targetFile.type === "application/pdf") {
-        console.log("[v0] Converting PDF to image for AIorNOT compatibility")
-        try {
-          fileToSend = await convertPdfToImage(targetFile)
-          console.log("[v0] PDF converted to image successfully")
-        } catch (conversionError) {
-          console.error("[v0] PDF conversion error:", conversionError)
-          throw new Error("Error al convertir PDF a imagen")
-        }
-      }
-
       const formData = new FormData()
-      formData.append("file", fileToSend)
+
       if (targetFile.type === "application/pdf") {
-        formData.append("originalFile", targetFile)
+        console.log("[v0] PDF detected, converting to image for AI detection")
+        try {
+          const imageFile = await convertPdfToImage(targetFile)
+          console.log("[v0] PDF successfully converted to image")
+          formData.append("file", imageFile) // Image for AI detection
+          formData.append("originalFile", targetFile) // Original PDF for extraction
+        } catch (conversionError) {
+          console.error("[v0] Failed to convert PDF to image:", conversionError)
+          console.log("[v0] Will skip AI detection for this PDF")
+          formData.append("originalFile", targetFile)
+        }
+      } else if (targetFile.type.startsWith("image/")) {
+        // For images (PNG, JPG, etc.), send directly for both AI detection and extraction
+        console.log("[v0] Image file detected, sending for AI detection")
+        formData.append("file", targetFile)
+      } else {
+        throw new Error(
+          language === "es"
+            ? "Tipo de archivo no soportado. Por favor sube un PDF, PNG o JPG"
+            : "Unsupported file type. Please upload a PDF, PNG or JPG",
+        )
       }
 
       const stepTimings = [
@@ -403,6 +386,15 @@ export default function PayrollVerificationPage() {
         method: "POST",
         body: formData,
       })
+
+      const contentType = response.headers.get("content-type")
+      if (!contentType || !contentType.includes("application/json")) {
+        const textResponse = await response.text()
+        console.error("[v0] Non-JSON response:", textResponse)
+        throw new Error(
+          language === "es" ? "Error del servidor: respuesta no válida" : "Server error: invalid response",
+        )
+      }
 
       if (!response.ok) {
         const errorData = await response.json()
@@ -423,6 +415,73 @@ export default function PayrollVerificationPage() {
       setCurrentStep("upload")
       setShowFilePreview(false)
     }
+  }
+
+  const convertPdfToImage = async (pdfFile: File): Promise<File> => {
+    const pdfjsLib = await import("pdfjs-dist")
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`
+
+    // Read PDF file
+    const arrayBuffer = await pdfFile.arrayBuffer()
+
+    console.log("[v0] PDF file size:", arrayBuffer.byteLength)
+
+    if (arrayBuffer.byteLength === 0) {
+      throw new Error("PDF file is empty")
+    }
+
+    // Load PDF
+    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer })
+    const pdf = await loadingTask.promise
+
+    console.log("[v0] PDF loaded successfully, pages:", pdf.numPages)
+
+    // Get first page
+    const page = await pdf.getPage(1)
+
+    // Set scale for good quality
+    const scale = 2.0
+    const viewport = page.getViewport({ scale })
+
+    // Create canvas
+    const canvas = document.createElement("canvas")
+    const context = canvas.getContext("2d")
+
+    if (!context) {
+      throw new Error("Could not get canvas context")
+    }
+
+    canvas.height = viewport.height
+    canvas.width = viewport.width
+
+    console.log("[v0] Canvas created:", canvas.width, "x", canvas.height)
+
+    // Render PDF page to canvas
+    await page.render({
+      canvasContext: context,
+      viewport: viewport,
+    }).promise
+
+    console.log("[v0] PDF page rendered to canvas")
+
+    // Convert canvas to blob
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob)
+        } else {
+          reject(new Error("Failed to convert canvas to blob"))
+        }
+      }, "image/png")
+    })
+
+    console.log("[v0] Canvas converted to blob, size:", blob.size)
+
+    // Create File from blob
+    const imageFile = new File([blob], "converted.png", { type: "image/png" })
+
+    return imageFile
   }
 
   const resetVerification = () => {
@@ -489,11 +548,11 @@ export default function PayrollVerificationPage() {
         "The system has analyzed the document and classified it as",
       "con una confianza del": "with a confidence of",
       "El análisis de AIorNOT ha detectado que este documento tiene una probabilidad del":
-        "AIorNOT analysis has detected that this document has a probability of",
+        "AI or NOT analysis has detected that this document has a probability of",
       "de haber sido generado o manipulado por inteligencia artificial":
         "of having been generated or manipulated by artificial intelligence",
       "El análisis de AIorNOT indica que este documento tiene una probabilidad muy baja":
-        "AIorNOT analysis indicates that this document has a very low probability",
+        "AI or NOT analysis indicates that this document has a very low probability",
       "de haber sido generado o manipulado por IA. El documento parece ser auténtico":
         "of having been generated or manipulated by AI. The document appears to be authentic",
       "La fecha de la nómina": "The payslip date",
@@ -585,25 +644,25 @@ export default function PayrollVerificationPage() {
 
     // Fallback to original reason (translated) or generic message
     if (result.reason) {
-      // Try to translate common error messages
-      const reasonTranslations: Record<string, string> = {
-        "El documento no es una nómina válida": "The document is not a valid payslip",
-        "El documento no contiene los campos requeridos de una nómina":
-          "The document does not contain the required payslip fields",
-        "No se pudo clasificar el documento": "Could not classify the document",
-        "El documento ha sido generado o manipulado por IA": "The document has been generated or manipulated by AI",
-        "Error al procesar el documento": "Error processing the document",
-      }
-
+      // Try exact match first
       if (language === "en") {
         // Try exact match first
-        if (reasonTranslations[result.reason]) {
-          return reasonTranslations[result.reason]
+        if (result.reason === "El documento no es una nómina válida") {
+          return "The document is not a valid payslip"
         }
-        // Try to translate using the same logic as explanations
-        return translateExplanation(result.reason, "")
+        if (result.reason === "El documento no contiene los campos requeridos de una nómina") {
+          return "The document does not contain the required payslip fields"
+        }
+        if (result.reason === "No se pudo clasificar el documento") {
+          return "Could not classify the document"
+        }
+        if (result.reason === "El documento ha sido generado o manipulado por IA") {
+          return "The document has been generated or manipulated by AI"
+        }
+        if (result.reason === "Error al procesar el documento") {
+          return "Error processing the document"
+        }
       }
-
       return result.reason
     }
 
@@ -616,74 +675,11 @@ export default function PayrollVerificationPage() {
     localStorage.setItem("payroll_language", lang)
   }
 
-  if (isCheckingAuth) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    )
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="flex min-h-screen items-center justify-center px-4">
-          <Card className="w-full max-w-md border border-border bg-card p-8">
-            <div className="mb-8 text-center">
-              <div className="mb-4 flex justify-center">
-                <div className="rounded-full bg-primary/10 p-4">
-                  <Lock className="h-8 w-8 text-primary" />
-                </div>
-              </div>
-              <h1 className="mb-2 text-2xl font-bold text-foreground">Payshit.ai</h1>
-              <p className="text-sm text-muted-foreground">
-                {language === "es" ? "Introduce la contraseña para acceder" : "Enter password to access"}
-              </p>
-            </div>
-
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <Input
-                  type="password"
-                  placeholder={language === "es" ? "Contraseña" : "Password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full"
-                  autoFocus
-                />
-              </div>
-
-              {authError && (
-                <div className="rounded-lg border border-red-500/50 bg-red-500/10 p-3">
-                  <p className="text-sm text-red-500">{authError}</p>
-                </div>
-              )}
-
-              <Button type="submit" className="w-full" size="lg">
-                {language === "es" ? "Acceder" : "Access"}
-              </Button>
-            </form>
-
-            <div className="mt-6 flex justify-center">
-              <button
-                onClick={() => setLanguage(language === "es" ? "en" : "es")}
-                className="text-sm text-muted-foreground hover:text-foreground"
-              >
-                {language === "es" ? "English" : "Español"}
-              </button>
-            </div>
-          </Card>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar
         language={language}
         onLanguageChange={handleLanguageChange}
-        onLogout={handleLogout}
         showApiButton={currentStep === "upload" && verificationStatus === "idle" && !result}
       />
 
@@ -705,12 +701,14 @@ export default function PayrollVerificationPage() {
 
       <div className="mx-auto max-w-7xl px-4 py-12">
         {currentStep === "upload" && verificationStatus !== "processing" && !result && (
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-12">
+          <div className="flex flex-col lg:flex-row lg:items-stretch lg:gap-5">
             <div className="flex-1 lg:max-w-[60%]">
-              <h1 className="mb-6 text-left font-mono text-5xl font-bold leading-tight tracking-tight text-foreground md:text-6xl lg:text-7xl">
+              <h1 className="font-mono text-5xl font-bold leading-tight tracking-tight text-foreground md:text-6xl text-left mb-6 lg:text-7xl">
                 {t.hero.title} <span className="text-primary">{t.hero.titleAccent}</span> {t.hero.titleEnd}
               </h1>
-              <p className="text-justify text-lg leading-relaxed text-muted-foreground md:text-xl">{t.hero.subtitle}</p>
+              <p className="text-lg leading-relaxed text-muted-foreground md:text-xl px-0 mx-0 leading-7 text-justify">
+                {t.hero.subtitle}
+              </p>
             </div>
 
             <div className="w-full lg:w-[40%]">
@@ -746,7 +744,7 @@ export default function PayrollVerificationPage() {
               ) : (
                 <>
                   <div
-                    className={`relative rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
+                    className={`relative rounded-lg border-2 border-dashed p-8 text-center transition-colors px-8 ${
                       dragActive ? "border-primary bg-primary/5" : "border-border bg-card/50"
                     }`}
                     onDragEnter={handleDrag}
@@ -907,48 +905,229 @@ export default function PayrollVerificationPage() {
                   onClick={() => setShowDocumentModal(true)}
                   className="flex-shrink-0"
                 >
-                  <Eye className="mr-2 h-4 w-4" />
+                  <Eye className="mr-2 h-4 w-4 flex-shrink-0 text-muted-foreground" />
                   {t.results.viewDocument}
                 </Button>
               )}
             </div>
 
-            {result.detailedChecks && result.detailedChecks.length > 0 && (
-              <div className="mb-6 space-y-2 rounded-lg border border-border bg-secondary/30 p-4">
-                <h3 className="mb-3 font-semibold text-card-foreground">{t.results.checksTitle}</h3>
-                <TooltipProvider>
-                  <div className="grid gap-3 md:grid-cols-2">
-                    {result.detailedChecks.map((check, index) => (
-                      <div key={index} className="flex items-start gap-2">
-                        {check.status === "success" ? (
-                          <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" />
-                        ) : check.status === "error" ? (
-                          <XCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-500" />
-                        ) : (
-                          <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-yellow-500" />
-                        )}
-                        <p className="flex-1 text-sm text-card-foreground">{translateCheckLabel(check.label)}</p>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button className="flex-shrink-0 text-muted-foreground transition-colors hover:text-foreground">
-                              <Info className="h-4 w-4" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent side="left" className="max-w-xs">
-                            <p className="text-xs">{translateExplanation(check.explanation, check.label)}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                    ))}
+            <div className="mb-6 grid gap-6 lg:grid-cols-[1fr,auto]">
+              {/* Checks section */}
+              {result.detailedChecks && result.detailedChecks.length > 0 && (
+                <div className="space-y-2 rounded-lg border border-border bg-secondary/30 p-4">
+                  <h3 className="mb-3 font-semibold text-card-foreground">{t.results.checksTitle}</h3>
+                  <TooltipProvider>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      {result.detailedChecks.map((check, index) => (
+                        <div key={index} className="flex items-start gap-2">
+                          {check.status === "success" ? (
+                            <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" />
+                          ) : check.status === "error" ? (
+                            <XCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-500" />
+                          ) : (
+                            <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-yellow-500" />
+                          )}
+                          <div className="flex flex-1 items-start gap-1">
+                            <p className="text-sm text-card-foreground">{translateCheckLabel(check.label)}</p>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button className="flex-shrink-0 text-muted-foreground transition-colors hover:text-foreground">
+                                  <Info className="h-4 w-4" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="left" className="max-w-xs">
+                                <p className="text-xs">{translateExplanation(check.explanation, check.label)}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </TooltipProvider>
+                </div>
+              )}
+
+              {/* AI Breakdown Section - Updated Layout */}
+              {result.aiBreakdown && result.aiBreakdown.class_probabilities && (
+                <div className="w-full space-y-4 rounded-lg border border-border bg-secondary/30 p-4">
+                  <h3 className="font-semibold text-card-foreground">{t.results.aiBreakdownTitle}</h3>
+
+                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    {/* Column 1: List of AI Generators */}
+                    {(() => {
+                      const filteredGenerators = Object.entries(result.aiBreakdown.class_probabilities || {})
+                        .filter(([className, probability]) => {
+                          const isNotAiOrHuman = className.toLowerCase() !== "ai" && className.toLowerCase() !== "human"
+                          const isAboveThreshold = probability >= 0.01
+                          return isNotAiOrHuman && isAboveThreshold
+                        })
+                        .sort(([, a], [, b]) => b - a)
+
+                      if (filteredGenerators.length === 0) return null
+
+                      return (
+                        <div className="space-y-3">
+                          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                            {language === "es" ? "Desglose de IA" : "AI Breakdown"}
+                          </p>
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                              <span>{t.results.aiClass}</span>
+                              <span>{t.results.aiLikelihood}</span>
+                            </div>
+                            {filteredGenerators.map(([className, probability]) => {
+                              const color = AI_GENERATOR_COLORS[className] || "#6b7280"
+                              return (
+                                <div key={className} className="flex items-center justify-between gap-4">
+                                  <div className="flex items-center gap-2">
+                                    <div
+                                      className="h-3 w-3 rounded-full flex-shrink-0"
+                                      style={{
+                                        backgroundColor: color,
+                                      }}
+                                    />
+                                    <span className="text-sm text-card-foreground">
+                                      {formatGeneratorName(className)}
+                                    </span>
+                                  </div>
+                                  <span className="text-sm font-medium text-green-500">
+                                    {(probability * 100).toFixed(0)}%
+                                  </span>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )
+                    })()}
+
+                    {/* Column 2: AI vs Human Pie Chart */}
+                    {result.aiBreakdown.ai_probability !== undefined &&
+                      (() => {
+                        const aiVsHumanData = [
+                          {
+                            name: language === "es" ? "IA" : "AI",
+                            value: result.aiBreakdown.ai_probability * 100,
+                            fill: AI_GENERATOR_COLORS.ai,
+                          },
+                          {
+                            name: language === "es" ? "Humano" : "Human",
+                            value: (1 - result.aiBreakdown.ai_probability) * 100,
+                            fill: AI_GENERATOR_COLORS.human,
+                          },
+                        ]
+
+                        console.log("[v0] AI vs Human chart data:", aiVsHumanData)
+
+                        return (
+                          <div className="space-y-2">
+                            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground text-center">
+                              {language === "es" ? "IA vs Humano" : "AI vs Human"}
+                            </p>
+                            <ResponsiveContainer width="100%" height={200}>
+                              <PieChart>
+                                <Pie
+                                  data={aiVsHumanData}
+                                  cx="50%"
+                                  cy="50%"
+                                  innerRadius={40}
+                                  outerRadius={70}
+                                  paddingAngle={2}
+                                  dataKey="value"
+                                >
+                                  {aiVsHumanData.map((entry, index) => {
+                                    console.log(`[v0] AI vs Human Cell ${index}:`, entry.name, entry.fill)
+                                    return <Cell key={`cell-${index}`} fill={entry.fill} />
+                                  })}
+                                </Pie>
+                                <RechartsTooltip
+                                  formatter={(value: number) => `${value.toFixed(1)}%`}
+                                  contentStyle={{
+                                    backgroundColor: "hsl(var(--popover))",
+                                    border: "1px solid hsl(var(--border))",
+                                    borderRadius: "0.5rem",
+                                    color: "hsl(var(--popover-foreground))",
+                                  }}
+                                />
+                                <Legend
+                                  verticalAlign="bottom"
+                                  height={36}
+                                  formatter={(value: string, entry: any) => (
+                                    <span className="text-xs text-card-foreground">
+                                      {value}: {entry.payload.value.toFixed(1)}%
+                                    </span>
+                                  )}
+                                />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          </div>
+                        )
+                      })()}
+
+                    {/* Column 3: AI Generators Breakdown Pie Chart */}
+                    {(() => {
+                      const filteredGenerators = Object.entries(result.aiBreakdown.class_probabilities || {})
+                        .filter(([className, probability]) => {
+                          const isNotAiOrHuman = className.toLowerCase() !== "ai" && className.toLowerCase() !== "human"
+                          const isAboveThreshold = probability >= 0.01
+                          return isNotAiOrHuman && isAboveThreshold
+                        })
+                        .sort(([, a], [, b]) => b - a)
+
+                      if (filteredGenerators.length === 0) return null
+
+                      const chartData = filteredGenerators.map(([className, probability]) => ({
+                        name: className,
+                        value: probability * 100,
+                        fill: AI_GENERATOR_COLORS[className] || "#6b7280",
+                      }))
+
+                      console.log("[v0] AI Distribution chart data:", chartData)
+
+                      return (
+                        <div className="space-y-2">
+                          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground text-center">
+                            {language === "es" ? "Distribución de IA" : "AI Distribution"}
+                          </p>
+                          <ResponsiveContainer width="100%" height={200}>
+                            <PieChart>
+                              <Pie
+                                data={chartData}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={40}
+                                outerRadius={70}
+                                paddingAngle={2}
+                                dataKey="value"
+                              >
+                                {chartData.map((entry, index) => {
+                                  console.log(`[v0] AI Distribution Cell ${index}:`, entry.name, entry.fill)
+                                  return <Cell key={`cell-${index}`} fill={entry.fill} />
+                                })}
+                              </Pie>
+                              <RechartsTooltip
+                                formatter={(value: number) => `${value.toFixed(1)}%`}
+                                contentStyle={{
+                                  backgroundColor: "hsl(var(--popover))",
+                                  border: "1px solid hsl(var(--border))",
+                                  borderRadius: "0.5rem",
+                                  color: "hsl(var(--popover-foreground))",
+                                }}
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                      )
+                    })()}
                   </div>
-                </TooltipProvider>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
 
             {result.extractedData && (
               <Collapsible open={isExtractedDataOpen} onOpenChange={setIsExtractedDataOpen} className="mb-6">
                 <div className="rounded-lg border border-border bg-secondary/20">
-                  <CollapsibleTrigger className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-secondary/30">
+                  <CollapsibleTrigger className="flex w-full items-center justify-between p-4 transition-colors hover:bg-secondary/30">
                     <h3 className="font-semibold text-card-foreground">{t.results.extractedTitle}</h3>
                     <ChevronDown
                       className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${

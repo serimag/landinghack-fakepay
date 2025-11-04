@@ -1,32 +1,32 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Sun, Moon, LogOut } from "lucide-react"
+import { Sun, Moon } from "lucide-react"
 import Link from "next/link"
 import { useTheme } from "next-themes"
 import { usePathname } from "next/navigation"
+import { Badge } from "@/components/ui/badge"
 
 interface NavbarProps {
   language: "es" | "en"
   onLanguageChange: (lang: "es" | "en") => void
-  onLogout?: () => void // Added optional logout handler
-  showApiButton?: boolean // Added prop to control API button visibility
+  showApiButton?: boolean
 }
 
 const translations = {
   es: {
     home: "Home",
     api: "API",
-    logout: "Cerrar sesión",
+    soon: "Próximamente",
   },
   en: {
     home: "Home",
     api: "API",
-    logout: "Logout",
+    soon: "Soon",
   },
 }
 
-export function Navbar({ language, onLanguageChange, onLogout, showApiButton = true }: NavbarProps) {
+export function Navbar({ language, onLanguageChange, showApiButton = true }: NavbarProps) {
   const { theme, setTheme } = useTheme()
   const t = translations[language]
   const pathname = usePathname()
@@ -55,14 +55,22 @@ export function Navbar({ language, onLanguageChange, onLogout, showApiButton = t
               {t.home}
             </Link>
             {showApiButton && (
-              <Link
-                href="/api-docs"
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  pathname === "/api-docs" ? "text-foreground" : "text-muted-foreground"
-                }`}
-              >
-                {t.api}
-              </Link>
+              <div className="relative">
+                <Badge
+                  variant="secondary"
+                  className="absolute -top-3 right-0 translate-x-1/2 z-10 text-[10px] px-1.5 py-0.5 pointer-events-none bg-primary text-primary-foreground hover:bg-primary"
+                >
+                  {t.soon}
+                </Badge>
+                <Link
+                  href="/api-docs"
+                  className={`text-sm font-medium transition-colors hover:text-primary ${
+                    pathname === "/api-docs" ? "text-foreground" : "text-muted-foreground"
+                  }`}
+                >
+                  {t.api}
+                </Link>
+              </div>
             )}
           </div>
 
@@ -89,18 +97,6 @@ export function Navbar({ language, onLanguageChange, onLogout, showApiButton = t
                 ES
               </Button>
             </div>
-
-            {onLogout && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onLogout}
-                className="h-9 gap-2 text-muted-foreground hover:text-foreground"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">{t.logout}</span>
-              </Button>
-            )}
           </div>
         </div>
       </div>

@@ -63,7 +63,7 @@ const translations = {
 
 export default function ExamplesPage() {
   const router = useRouter()
-  const [language, setLanguage] = useState<"es" | "en">("es")
+  const [language, setLanguage] = useState<"es" | "en">("en")
   const [selectedPdf, setSelectedPdf] = useState<string | null>(null)
 
   useEffect(() => {
@@ -93,7 +93,7 @@ export default function ExamplesPage() {
     {
       id: 3,
       titleKey: "payslipAiGenerated" as const,
-      file: "/examples/payslip-ai-generated.pdf",
+      file: "/examples/payslip_ai.pdf",
       icon: Bot,
       status: "error" as const,
     },

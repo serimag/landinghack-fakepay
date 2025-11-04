@@ -134,7 +134,7 @@ const translations = {
 }
 
 export default function APIDocsPage() {
-  const [language, setLanguage] = useState<"es" | "en">("es")
+  const [language, setLanguage] = useState<"es" | "en">("en")
   const [copiedSection, setCopiedSection] = useState<string | null>(null)
 
   useEffect(() => {

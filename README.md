@@ -19,24 +19,19 @@ Create a `.env.local` file with the following variables:
 \`\`\`sh
 # LandingAI Configuration
 LANDINGAI_API_KEY=your_landingai_api_key
-LANDINGAI_ENDPOINT_ID=your_endpoint_id
 
 # AIorNOT Configuration
 AIORNOT_API_KEY=your_aiornot_api_key
 
 # API REST Configuration
 PAYROLL_API_KEY=your_secret_key_for_rest_api
-
-# Web Interface Password (optional, defaults to PAYROLL_API_KEY)
-WEB_PASSWORD=your_password_for_web_access
 \`\`\`
 
 ### Getting API Keys
 
-1. **LandingAI**: Sign up at [landing.ai](https://landing.ai) and create a document classification endpoint
+1. **LandingAI**: Sign up at [landing.ai](https://landing.ai) and get your API key from settings
 2. **AIorNOT**: Get your API key at [aiornot.com](https://aiornot.com)
 3. **PAYROLL_API_KEY**: Generate a secure key to protect your REST API
-4. **WEB_PASSWORD**: Define a password for web access (optional)
 
 ## Installation
 
@@ -55,7 +50,7 @@ npm run build
 
 ### Web Interface
 
-1. Access the application and enter the password
+1. Access the application
 2. Drag or select a payslip file (PDF, PNG, JPG)
 3. Click "Verify Payslip"
 4. The system will process the document in 4 steps:
@@ -81,7 +76,7 @@ curl -X POST https://payshit.ai/api/v1/verify \
 
 - LandingAI and AIorNOT API keys are stored as environment variables and never exposed to the client
 - REST API requires authentication via Bearer token
-- All passwords and keys must be configured through environment variables
+- All API keys must be configured through environment variables
 - Do not include `.env.local` files in version control
 
 ## Technologies
