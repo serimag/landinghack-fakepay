@@ -16,7 +16,7 @@ Automatic validation system for Spanish payslips using AI to detect fraud and ve
 
 Create a `.env.local` file with the following variables:
 
-\`\`\`bash
+\`\`\`sh
 # LandingAI Configuration
 LANDINGAI_API_KEY=your_landingai_api_key
 LANDINGAI_ENDPOINT_ID=your_endpoint_id
@@ -40,7 +40,7 @@ WEB_PASSWORD=your_password_for_web_access
 
 ## Installation
 
-\`\`\`bash
+\`\`\`sh
 # Install dependencies
 npm install
 
@@ -71,7 +71,7 @@ Check the complete API documentation at `/api-docs` or visit the "API" button in
 
 **Basic example:**
 
-\`\`\`bash
+\`\`\`sh
 curl -X POST https://payshit.ai/api/v1/verify \
   -H "Authorization: Bearer your_api_key" \
   -F "file=@payslip.pdf"
