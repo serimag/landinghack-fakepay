@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Navbar } from "@/components/navbar"
@@ -136,6 +136,17 @@ const translations = {
 export default function APIDocsPage() {
   const [language, setLanguage] = useState<"es" | "en">("es")
   const [copiedSection, setCopiedSection] = useState<string | null>(null)
+
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem("payroll_language") as "es" | "en" | null
+    if (savedLanguage) {
+      setLanguage(savedLanguage)
+    }
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem("payroll_language", language)
+  }, [language])
 
   const t = translations[language]
 

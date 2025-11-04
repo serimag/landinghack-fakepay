@@ -10,6 +10,7 @@ interface NavbarProps {
   language: "es" | "en"
   onLanguageChange: (lang: "es" | "en") => void
   onLogout?: () => void // Added optional logout handler
+  showApiButton?: boolean // Added prop to control API button visibility
 }
 
 const translations = {
@@ -25,7 +26,7 @@ const translations = {
   },
 }
 
-export function Navbar({ language, onLanguageChange, onLogout }: NavbarProps) {
+export function Navbar({ language, onLanguageChange, onLogout, showApiButton = true }: NavbarProps) {
   const { theme, setTheme } = useTheme()
   const t = translations[language]
   const pathname = usePathname()
@@ -53,14 +54,16 @@ export function Navbar({ language, onLanguageChange, onLogout }: NavbarProps) {
             >
               {t.home}
             </Link>
-            <Link
-              href="/api-docs"
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                pathname === "/api-docs" ? "text-foreground" : "text-muted-foreground"
-              }`}
-            >
-              {t.api}
-            </Link>
+            {showApiButton && (
+              <Link
+                href="/api-docs"
+                className={`text-sm font-medium transition-colors hover:text-primary ${
+                  pathname === "/api-docs" ? "text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                {t.api}
+              </Link>
+            )}
           </div>
 
           <div className="flex items-center gap-2">

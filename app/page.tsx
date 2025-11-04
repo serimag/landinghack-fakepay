@@ -14,6 +14,8 @@ import {
   ChevronDown,
   Info,
   Lock,
+  Eye,
+  X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -22,6 +24,7 @@ import { Navbar } from "@/components/navbar"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Input } from "@/components/ui/input"
+import Link from "next/link"
 
 type VerificationStep = "upload" | "classifying" | "ai-detection" | "extracting" | "validating" | "complete"
 type VerificationStatus = "idle" | "processing" | "success" | "error"
@@ -80,6 +83,7 @@ const translations = {
       checksTitle: "Comprobaciones Realizadas",
       extractedTitle: "Datos Extraídos",
       verifyAnother: "Verificar Otra Nómina",
+      viewDocument: "Ver Documento",
     },
     checks: {
       labels: {
@@ -90,14 +94,19 @@ const translations = {
         "Nómina con más de 3 meses de antigüedad": "Payslip older than 3 months",
         "Periodo de liquidación válido": "Valid settlement period",
         "Periodo de liquidación anterior a la antigüedad": "Settlement period before seniority date",
-        "Total deducido correcto": "Correct total deductions",
-        "Las deducciones no suman el total deducido": "Deductions don't match total",
+        "Los conceptos devengados suman correctamente": "Earning items sum correctly",
+        "Los conceptos devengados no suman el total devengado": "Earning items don't match total earnings",
+        "Los conceptos deducidos suman correctamente": "Deduction items sum correctly",
+        "Los conceptos deducidos no suman el total deducido": "Deduction items don't match total deductions",
+        "Líquido a percibir correcto": "Net salary correct",
+        "El líquido a percibir no coincide con el cálculo": "Net salary doesn't match calculation",
         "Total devengado verificado": "Total earnings verified",
         "NIF de empleado válido": "Valid employee ID",
         "NIF de empleado inválido": "Invalid employee ID",
         "Formato de NIF inválido": "Invalid ID format",
         "CIF de empresa válido": "Valid company tax ID",
-        "Formato de CIF inválido": "Invalid company tax ID format",
+        "Formato de CIF inválido": "Invalid tax ID format",
+        "No se pudo validar el periodo de liquidación": "Could not validate settlement period",
       },
     },
     fields: {
@@ -152,6 +161,7 @@ const translations = {
       checksTitle: "Checks Performed",
       extractedTitle: "Extracted Data",
       verifyAnother: "Verify Another Payslip",
+      viewDocument: "View Document",
     },
     checks: {
       labels: {
@@ -162,14 +172,19 @@ const translations = {
         "Nómina con más de 3 meses de antigüedad": "Payslip older than 3 months",
         "Periodo de liquidación válido": "Valid settlement period",
         "Periodo de liquidación anterior a la antigüedad": "Settlement period before seniority date",
-        "Total deducido correcto": "Correct total deductions",
-        "Las deducciones no suman el total deducido": "Deductions don't match total",
+        "Los conceptos devengados suman correctamente": "Earning items sum correctly",
+        "Los conceptos devengados no suman el total devengado": "Earning items don't match total earnings",
+        "Los conceptos deducidos suman correctamente": "Deduction items sum correctly",
+        "Los conceptos deducidos no suman el total deducido": "Deduction items don't match total deductions",
+        "Líquido a percibir correcto": "Net salary correct",
+        "El líquido a percibir no coincide con el cálculo": "Net salary doesn't match calculation",
         "Total devengado verificado": "Total earnings verified",
         "NIF de empleado válido": "Valid employee ID",
         "NIF de empleado inválido": "Invalid employee ID",
         "Formato de NIF inválido": "Invalid ID format",
         "CIF de empresa válido": "Valid company tax ID",
-        "Formato de CIF inválido": "Invalid company tax ID format",
+        "Formato de CIF inválido": "Invalid tax ID format",
+        "No se pudo validar el periodo de liquidación": "Could not validate settlement period",
       },
     },
     fields: {
@@ -240,6 +255,8 @@ export default function PayrollVerificationPage() {
   const [error, setError] = useState<string | null>(null)
   const [showFilePreview, setShowFilePreview] = useState(false)
   const [isExtractedDataOpen, setIsExtractedDataOpen] = useState(false)
+  const [showDocumentModal, setShowDocumentModal] = useState(false)
+  const [documentUrl, setDocumentUrl] = useState<string | null>(null)
 
   const t = translations[language]
 
@@ -248,7 +265,43 @@ export default function PayrollVerificationPage() {
     if (authStatus === "true") {
       setIsAuthenticated(true)
     }
+    const savedLanguage = localStorage.getItem("payroll_language") as "es" | "en" | null
+    if (savedLanguage) {
+      setLanguage(savedLanguage)
+    }
     setIsCheckingAuth(false)
+  }, [])
+
+  useEffect(() => {
+    const exampleFilePath = sessionStorage.getItem("exampleFilePath")
+    const exampleFileName = sessionStorage.getItem("exampleFileName")
+
+    if (exampleFilePath && exampleFileName) {
+      // Fetch the file directly from the path
+      fetch(exampleFilePath)
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error(`Failed to fetch file: ${res.statusText}`)
+          }
+          return res.blob()
+        })
+        .then((blob) => {
+          const file = new File([blob], exampleFileName, { type: "application/pdf" })
+          setFile(file)
+          setShowFilePreview(true)
+          setTimeout(() => {
+            handleVerify(file)
+          }, 1000)
+        })
+        .catch((error) => {
+          console.error("[v0] Error loading example file:", error)
+          setError(language === "es" ? "Error al cargar el archivo de ejemplo" : "Error loading example file")
+        })
+        .finally(() => {
+          sessionStorage.removeItem("exampleFilePath")
+          sessionStorage.removeItem("exampleFileName")
+        })
+    }
   }, [])
 
   const handleLogin = (e: React.FormEvent) => {
@@ -305,6 +358,9 @@ export default function PayrollVerificationPage() {
   const handleVerify = async (fileToVerify?: File) => {
     const targetFile = fileToVerify || file
     if (!targetFile) return
+
+    const url = URL.createObjectURL(targetFile)
+    setDocumentUrl(url)
 
     setShowFilePreview(false)
     setVerificationStatus("processing")
@@ -376,6 +432,10 @@ export default function PayrollVerificationPage() {
     setResult(null)
     setError(null)
     setShowFilePreview(false)
+    if (documentUrl) {
+      URL.revokeObjectURL(documentUrl)
+      setDocumentUrl(null)
+    }
   }
 
   const steps = [
@@ -444,20 +504,34 @@ export default function PayrollVerificationPage() {
         "is more than 3 months old. Only payslips from the last 3 months are accepted",
       "El periodo de liquidación": "The settlement period",
       "es posterior a la fecha de antigüedad del empleado": "is after the employee's seniority date",
+      "es igual o posterior a la fecha de antigüedad del empleado":
+        "is equal to or after the employee's seniority date",
       "lo cual es correcto": "which is correct",
       "es anterior a la fecha de antigüedad del empleado": "is before the employee's seniority date",
       "Esto es imposible ya que el empleado no trabajaba en la empresa en ese periodo":
         "This is impossible as the employee was not working at the company during that period",
+      "La suma de los conceptos devengados": "The sum of earning items",
+      "coincide con el total devengado": "matches the total earnings",
+      "Error: La suma de los conceptos devengados es": "Error: The sum of earning items is",
+      "pero el total devengado indicado es": "but the total earnings shown is",
+      "La suma de los conceptos deducidos": "The sum of deduction items",
+      "coincide con el total deducido": "matches the total deductions",
+      "Error: La suma de los conceptos deducidos es": "Error: The sum of deduction items is",
+      "pero el total deducido indicado es": "but the total deductions shown is",
       "El cálculo es correcto: Total devengado": "The calculation is correct: Total earnings",
+      "El cálculo del líquido a percibir es correcto: Total devengado":
+        "The net salary calculation is correct: Total earnings",
       "Total deducido": "Total deductions",
       "Líquido a percibir": "Net salary",
       "Error en el cálculo": "Calculation error",
+      "Error en el cálculo del líquido a percibir: Total devengado": "Error in net salary calculation: Total earnings",
       "debería ser": "should be",
       "pero el documento indica": "but the document shows",
       Diferencia: "Difference",
       "El total devengado": "The total earnings",
       "ha sido verificado y es consistente con el líquido a percibir":
         "has been verified and is consistent with the net salary",
+      "ha sido verificado": "has been verified",
       "El NIF del empleado": "The employee's ID",
       "tiene un formato correcto y el dígito de control es válido":
         "has a correct format and the control digit is valid",
@@ -470,11 +544,15 @@ export default function PayrollVerificationPage() {
         "has a valid format: initial letter followed by 7 digits and a control digit",
       "no tiene el formato correcto. Debe ser una letra mayúscula seguida de 7 dígitos y un dígito de control":
         "does not have the correct format. It must be an uppercase letter followed by 7 digits and a control digit",
+      "No se pudo validar la relación entre el periodo de liquidación":
+        "Could not validate the relationship between the settlement period",
+      "y la fecha de antigüedad": "and the seniority date",
+      "debido a un formato de fecha no reconocido": "due to an unrecognized date format",
     }
 
     let translated = explanation
     for (const [spanish, english] of Object.entries(translations)) {
-      translated = translated.replace(spanish, english)
+      translated = translated.replace(new RegExp(spanish, "g"), english)
     }
 
     return translated
@@ -486,6 +564,56 @@ export default function PayrollVerificationPage() {
     }
     // Fallback: convert camelCase to readable format
     return fieldKey.replace(/([A-Z])/g, " $1").trim()
+  }
+
+  const getErrorSummary = (result: VerificationResult): string | string[] => {
+    if (result.status === "valid") {
+      return t.results.validDesc
+    }
+
+    // If there are detailed checks, generate summary from failed checks
+    if (result.detailedChecks && result.detailedChecks.length > 0) {
+      const failedChecks = result.detailedChecks.filter((check) => check.status === "error")
+
+      if (failedChecks.length > 0) {
+        const errorMessages = failedChecks.map((check) => translateExplanation(check.explanation, check.label))
+
+        // Return array if multiple errors, single string if one error
+        return errorMessages.length > 1 ? errorMessages : errorMessages[0]
+      }
+    }
+
+    // Fallback to original reason (translated) or generic message
+    if (result.reason) {
+      // Try to translate common error messages
+      const reasonTranslations: Record<string, string> = {
+        "El documento no es una nómina válida": "The document is not a valid payslip",
+        "El documento no contiene los campos requeridos de una nómina":
+          "The document does not contain the required payslip fields",
+        "No se pudo clasificar el documento": "Could not classify the document",
+        "El documento ha sido generado o manipulado por IA": "The document has been generated or manipulated by AI",
+        "Error al procesar el documento": "Error processing the document",
+      }
+
+      if (language === "en") {
+        // Try exact match first
+        if (reasonTranslations[result.reason]) {
+          return reasonTranslations[result.reason]
+        }
+        // Try to translate using the same logic as explanations
+        return translateExplanation(result.reason, "")
+      }
+
+      return result.reason
+    }
+
+    // Generic fallback message
+    return language === "es" ? "El documento no es una nómina válida" : "The document is not a valid payslip"
+  }
+
+  const handleLanguageChange = (lang: "es" | "en") => {
+    setLanguage(lang)
+    localStorage.setItem("payroll_language", lang)
   }
 
   if (isCheckingAuth) {
@@ -552,10 +680,31 @@ export default function PayrollVerificationPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar language={language} onLanguageChange={setLanguage} onLogout={handleLogout} />
+      <Navbar
+        language={language}
+        onLanguageChange={handleLanguageChange}
+        onLogout={handleLogout}
+        showApiButton={currentStep === "upload" && verificationStatus === "idle" && !result}
+      />
+
+      {showDocumentModal && documentUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+          <div className="relative h-full w-full max-w-4xl">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-0 top-0 z-10 text-white hover:bg-white/20"
+              onClick={() => setShowDocumentModal(false)}
+            >
+              <X className="h-6 w-6" />
+            </Button>
+            <iframe src={documentUrl} className="h-full w-full rounded-lg bg-white" title="Document viewer" />
+          </div>
+        </div>
+      )}
 
       <div className="mx-auto max-w-7xl px-4 py-12">
-        {currentStep === "upload" && (
+        {currentStep === "upload" && verificationStatus !== "processing" && !result && (
           <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-12">
             <div className="flex-1 lg:max-w-[60%]">
               <h1 className="mb-6 text-left font-mono text-5xl font-bold leading-tight tracking-tight text-foreground md:text-6xl lg:text-7xl">
@@ -595,43 +744,53 @@ export default function PayrollVerificationPage() {
                   </div>
                 </div>
               ) : (
-                <div
-                  className={`relative rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
-                    dragActive ? "border-primary bg-primary/5" : "border-border bg-card/50"
-                  }`}
-                  onDragEnter={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDragOver={handleDrag}
-                  onDrop={handleDrop}
-                >
-                  <input
-                    type="file"
-                    id="file-upload"
-                    className="hidden"
-                    accept=".pdf,.png,.jpg,.jpeg"
-                    onChange={handleFileChange}
-                  />
+                <>
+                  <div
+                    className={`relative rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
+                      dragActive ? "border-primary bg-primary/5" : "border-border bg-card/50"
+                    }`}
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                  >
+                    <input
+                      type="file"
+                      id="file-upload"
+                      className="hidden"
+                      accept=".pdf,.png,.jpg,.jpeg"
+                      onChange={handleFileChange}
+                    />
 
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="rounded-full bg-primary/10 p-4">
-                      <Upload className="h-8 w-8 text-primary" />
-                    </div>
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="rounded-full bg-primary/10 p-4">
+                        <Upload className="h-8 w-8 text-primary" />
+                      </div>
 
-                    <div className="space-y-2">
-                      <p className="text-base font-medium text-card-foreground">{t.upload.dragText}</p>
-                      <p className="text-sm text-muted-foreground">{t.upload.clickText}</p>
-                      <p className="text-xs text-muted-foreground">PDF, PNG, JPG • Max 10MB</p>
+                      <div className="space-y-2">
+                        <p className="text-base font-medium text-card-foreground">{t.upload.dragText}</p>
+                        <p className="text-sm text-muted-foreground">{t.upload.clickText}</p>
+                        <p className="text-xs text-muted-foreground">PDF, PNG, JPG • Max 10MB</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        className="cursor-pointer bg-transparent transition-all duration-300 hover:scale-105 hover:border-primary hover:bg-primary/10 hover:shadow-lg hover:shadow-primary/30"
+                        onClick={() => document.getElementById("file-upload")?.click()}
+                      >
+                        {t.upload.selectButton}
+                      </Button>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="cursor-pointer bg-transparent transition-all duration-300 hover:scale-105 hover:border-primary hover:bg-primary/10 hover:shadow-lg hover:shadow-primary/30"
-                      onClick={() => document.getElementById("file-upload")?.click()}
-                    >
-                      {t.upload.selectButton}
-                    </Button>
                   </div>
-                </div>
+
+                  <div className="mt-4 text-center">
+                    <Link href="/examples">
+                      <Button variant="link" className="text-primary hover:text-primary/80">
+                        {language === "es" ? "Utiliza nuestros ejemplos" : "Use our examples"} →
+                      </Button>
+                    </Link>
+                  </div>
+                </>
               )}
             </div>
           </div>
@@ -701,38 +860,60 @@ export default function PayrollVerificationPage() {
 
         {currentStep === "complete" && result && (
           <Card className="border border-border bg-card p-8">
-            <div className="mb-6 flex items-start gap-4">
-              {result.status === "valid" ? (
-                <div className="rounded-full bg-green-500/10 p-3">
-                  <CheckCircle2 className="h-8 w-8 text-green-500" />
-                </div>
-              ) : result.status === "fraudulent" ? (
-                <div className="rounded-full bg-red-500/10 p-3">
-                  <XCircle className="h-8 w-8 text-red-500" />
-                </div>
-              ) : (
-                <div className="rounded-full bg-red-500/10 p-3">
-                  <XCircle className="h-8 w-8 text-red-500" />
-                </div>
-              )}
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div className="flex items-start gap-4">
+                {result.status === "valid" ? (
+                  <div className="rounded-full bg-green-500/10 p-3">
+                    <CheckCircle2 className="h-8 w-8 text-green-500" />
+                  </div>
+                ) : result.status === "fraudulent" ? (
+                  <div className="rounded-full bg-red-500/10 p-3">
+                    <XCircle className="h-8 w-8 text-red-500" />
+                  </div>
+                ) : (
+                  <div className="rounded-full bg-red-500/10 p-3">
+                    <XCircle className="h-8 w-8 text-red-500" />
+                  </div>
+                )}
 
-              <div className="flex-1">
-                <h2 className="mb-2 text-2xl font-semibold text-card-foreground">
-                  {result.status === "valid"
-                    ? t.results.valid
-                    : result.status === "fraudulent"
-                      ? t.results.fraudulent
-                      : t.results.invalid}
-                </h2>
-                <p className="text-muted-foreground">
-                  {result.status === "valid"
-                    ? t.results.validDesc
-                    : result.reason || "El documento no es una nómina válida"}
-                </p>
+                <div className="flex-1">
+                  <h2 className="mb-2 text-2xl font-semibold text-card-foreground">
+                    {result.status === "valid"
+                      ? t.results.valid
+                      : result.status === "fraudulent"
+                        ? t.results.fraudulent
+                        : t.results.invalid}
+                  </h2>
+                  {(() => {
+                    const summary = getErrorSummary(result)
+                    if (Array.isArray(summary)) {
+                      return (
+                        <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
+                          {summary.map((error, index) => (
+                            <li key={index}>{error}</li>
+                          ))}
+                        </ul>
+                      )
+                    }
+                    return <p className="text-muted-foreground">{summary}</p>
+                  })()}
+                </div>
               </div>
+
+              {documentUrl && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowDocumentModal(true)}
+                  className="flex-shrink-0"
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  {t.results.viewDocument}
+                </Button>
+              )}
             </div>
 
-            {result.status === "valid" && result.detailedChecks && result.detailedChecks.length > 0 && (
+            {result.detailedChecks && result.detailedChecks.length > 0 && (
               <div className="mb-6 space-y-2 rounded-lg border border-border bg-secondary/30 p-4">
                 <h3 className="mb-3 font-semibold text-card-foreground">{t.results.checksTitle}</h3>
                 <TooltipProvider>
@@ -764,7 +945,7 @@ export default function PayrollVerificationPage() {
               </div>
             )}
 
-            {result.status === "valid" && result.extractedData && (
+            {result.extractedData && (
               <Collapsible open={isExtractedDataOpen} onOpenChange={setIsExtractedDataOpen} className="mb-6">
                 <div className="rounded-lg border border-border bg-secondary/20">
                   <CollapsibleTrigger className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-secondary/30">
@@ -778,14 +959,16 @@ export default function PayrollVerificationPage() {
                   <CollapsibleContent>
                     <div className="border-t border-border p-4">
                       <div className="grid gap-3 md:grid-cols-2">
-                        {Object.entries(result.extractedData).map(([key, value]) => (
-                          <div key={key} className="flex flex-col gap-1">
-                            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                              {translateFieldName(key)}
-                            </span>
-                            <span className="text-sm text-card-foreground">{String(value)}</span>
-                          </div>
-                        ))}
+                        {Object.entries(result.extractedData)
+                          .filter(([key]) => key !== "earningItems" && key !== "deductionItems")
+                          .map(([key, value]) => (
+                            <div key={key} className="flex flex-col gap-1">
+                              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                {translateFieldName(key)}
+                              </span>
+                              <span className="text-sm text-card-foreground">{String(value)}</span>
+                            </div>
+                          ))}
                       </div>
                     </div>
                   </CollapsibleContent>

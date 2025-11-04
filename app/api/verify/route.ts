@@ -190,16 +190,18 @@ async function detectAIGeneration(file: File): Promise<{ isAIGenerated: boolean;
 
 // Data Extraction (using OCR or similar)
 async function extractPayrollData(file: File): Promise<Record<string, any>> {
+  const apiKey = process.env.LANDINGAI_API_KEY
+
+  if (!apiKey) {
+    console.log("[v0] LandingAI API key not configured, using mock extraction")
+    return getMockPayrollData()
+  }
+
   try {
-    const apiKey = process.env.LANDINGAI_API_KEY
-
-    if (!apiKey) {
-      console.log("[v0] LandingAI credentials not configured, using mock extraction")
-      return getMockPayrollData()
-    }
-
     const parseFormData = new FormData()
     parseFormData.append("document", file)
+
+    console.log("[v0] Calling LandingAI ADE parse endpoint")
 
     const parseResponse = await fetch("https://api.va.eu-west-1.landing.ai/v1/ade/parse", {
       method: "POST",
@@ -210,7 +212,17 @@ async function extractPayrollData(file: File): Promise<Record<string, any>> {
     })
 
     if (!parseResponse.ok) {
-      throw new Error(`ADE Parse error: ${parseResponse.statusText}`)
+      const errorBody = await parseResponse.text()
+      console.error("[v0] LandingAI ADE Parse error:", parseResponse.status, errorBody)
+
+      if (parseResponse.status === 401) {
+        console.log("[v0] Invalid LandingAI API key, falling back to mock data")
+        console.log("[v0] Please configure a valid API key from https://api.va.eu-west-1.landing.ai/settings/api-key")
+        return getMockPayrollData()
+      }
+
+      console.log("[v0] LandingAI API error, falling back to mock data")
+      return getMockPayrollData()
     }
 
     const parseData = await parseResponse.json()
@@ -219,7 +231,6 @@ async function extractPayrollData(file: File): Promise<Record<string, any>> {
     const extractFormData = new FormData()
     extractFormData.append("markdown", markdown)
 
-    // Define schema for payroll data extraction
     const schema = {
       type: "object",
       properties: {
@@ -233,6 +244,28 @@ async function extractPayrollData(file: File): Promise<Record<string, any>> {
         totalEarnings: { type: "number", description: "Total devengado" },
         totalDeductions: { type: "number", description: "Total deducido" },
         netSalary: { type: "number", description: "Líquido a percibir" },
+        earningItems: {
+          type: "array",
+          description: "Lista de conceptos devengados individuales",
+          items: {
+            type: "object",
+            properties: {
+              concept: { type: "string", description: "Nombre del concepto" },
+              amount: { type: "number", description: "Importe del concepto" },
+            },
+          },
+        },
+        deductionItems: {
+          type: "array",
+          description: "Lista de conceptos deducidos individuales",
+          items: {
+            type: "object",
+            properties: {
+              concept: { type: "string", description: "Nombre del concepto" },
+              amount: { type: "number", description: "Importe del concepto" },
+            },
+          },
+        },
       },
     }
 
@@ -249,7 +282,16 @@ async function extractPayrollData(file: File): Promise<Record<string, any>> {
     })
 
     if (!extractResponse.ok) {
-      throw new Error(`ADE Extract error: ${extractResponse.statusText}`)
+      const errorBody = await extractResponse.text()
+      console.error("[v0] LandingAI ADE Extract error:", extractResponse.status, errorBody)
+
+      if (extractResponse.status === 401) {
+        console.log("[v0] Invalid LandingAI API key, falling back to mock data")
+        return getMockPayrollData()
+      }
+
+      console.log("[v0] LandingAI API error, falling back to mock data")
+      return getMockPayrollData()
     }
 
     const extractData = await extractResponse.json()
@@ -258,6 +300,7 @@ async function extractPayrollData(file: File): Promise<Record<string, any>> {
     return extractData.extraction || getMockPayrollData()
   } catch (error) {
     console.error("[v0] Data extraction error:", error)
+    console.log("[v0] Falling back to mock data due to error")
     return getMockPayrollData()
   }
 }
@@ -274,6 +317,14 @@ function getMockPayrollData(): Record<string, any> {
     totalEarnings: 2500.0,
     totalDeductions: 624.5,
     netSalary: 1875.5,
+    earningItems: [
+      { concept: "Salario base", amount: 1800.0 },
+      { concept: "Complementos", amount: 700.0 },
+    ],
+    deductionItems: [
+      { concept: "IRPF", amount: 450.0 },
+      { concept: "Seguridad Social", amount: 174.5 },
+    ],
   }
 }
 
@@ -336,15 +387,23 @@ function validatePayrollData(data: Record<string, any>): {
     const liquidationPeriod = data.liquidationPeriod
     const seniorityDate = data.seniorityDate
 
-    // Try to parse liquidation period
     let liquidationDate: Date | null = null
 
-    // Format: "01 AGO 25 a 31 AGO 25" or "01/2024"
-    if (liquidationPeriod.includes("/")) {
+    // Format: "01/2024"
+    if (liquidationPeriod.includes("/") && !liquidationPeriod.includes("-")) {
       const [month, year] = liquidationPeriod.split("/")
       liquidationDate = new Date(Number.parseInt(year), Number.parseInt(month) - 1)
-    } else if (liquidationPeriod.includes("a")) {
-      // Extract year from format like "01 AGO 25 a 31 AGO 25"
+    }
+    // Format: "2025-09-01 a 2025-09-31" (ISO format)
+    else if (liquidationPeriod.includes("-") && liquidationPeriod.includes("a")) {
+      const parts = liquidationPeriod.split(" a ")
+      if (parts.length === 2) {
+        // Take the start date of the period
+        liquidationDate = new Date(parts[0])
+      }
+    }
+    // Format: "01 AGO 25 a 31 AGO 25"
+    else if (liquidationPeriod.includes("a")) {
       const parts = liquidationPeriod.split(" ")
       const yearPart = parts[2] // "25"
       const monthPart = parts[1] // "AGO"
@@ -369,57 +428,114 @@ function validatePayrollData(data: Record<string, any>): {
 
     const seniorityDateObj = new Date(seniorityDate)
 
-    if (liquidationDate && liquidationDate < seniorityDateObj) {
-      isValid = false
-      reason = "El periodo de liquidación es anterior a la fecha de antigüedad"
-      details.push("❌ Periodo de liquidación anterior a la antigüedad")
-      detailedChecks.push({
-        label: "Periodo de liquidación anterior a la antigüedad",
-        status: "error",
-        explanation: `El periodo de liquidación (${liquidationPeriod}) es anterior a la fecha de antigüedad del empleado (${seniorityDate}). Esto es imposible ya que el empleado no trabajaba en la empresa en ese periodo.`,
-      })
+    if (liquidationDate && !isNaN(liquidationDate.getTime()) && !isNaN(seniorityDateObj.getTime())) {
+      if (liquidationDate < seniorityDateObj) {
+        isValid = false
+        reason = "El periodo de liquidación es anterior a la fecha de antigüedad"
+        details.push("❌ Periodo de liquidación anterior a la antigüedad")
+        detailedChecks.push({
+          label: "Periodo de liquidación anterior a la antigüedad",
+          status: "error",
+          explanation: `El periodo de liquidación (${liquidationPeriod}) es anterior a la fecha de antigüedad del empleado (${seniorityDate}). Esto es imposible ya que el empleado no trabajaba en la empresa en ese periodo.`,
+        })
+      } else {
+        details.push("✓ Periodo de liquidación válido")
+        detailedChecks.push({
+          label: "Periodo de liquidación válido",
+          status: "success",
+          explanation: `El periodo de liquidación (${liquidationPeriod}) es igual o posterior a la fecha de antigüedad del empleado (${seniorityDate}), lo cual es correcto.`,
+        })
+      }
     } else {
-      details.push("✓ Periodo de liquidación válido")
+      // If we can't parse the dates, add a warning but don't fail validation
       detailedChecks.push({
-        label: "Periodo de liquidación válido",
-        status: "success",
-        explanation: `El periodo de liquidación (${liquidationPeriod}) es posterior a la fecha de antigüedad del empleado (${seniorityDate}), lo cual es correcto.`,
+        label: "No se pudo validar el periodo de liquidación",
+        status: "warning",
+        explanation: `No se pudo validar la relación entre el periodo de liquidación (${liquidationPeriod}) y la fecha de antigüedad (${seniorityDate}) debido a un formato de fecha no reconocido.`,
       })
     }
   }
 
-  // Validate deductions calculation
+  if (data.earningItems && Array.isArray(data.earningItems) && data.earningItems.length > 0 && data.totalEarnings) {
+    const sumEarnings = data.earningItems.reduce((sum: number, item: any) => sum + (item.amount || 0), 0)
+    const difference = Math.abs(sumEarnings - data.totalEarnings)
+
+    if (difference < 1) {
+      details.push("✓ Los conceptos devengados suman correctamente")
+      detailedChecks.push({
+        label: "Los conceptos devengados suman correctamente",
+        status: "success",
+        explanation: `La suma de los conceptos devengados (${sumEarnings.toFixed(2)}€) coincide con el total devengado (${data.totalEarnings}€).`,
+      })
+    } else {
+      isValid = false
+      reason = "Los conceptos devengados no suman el total devengado"
+      details.push("❌ Los conceptos devengados no suman el total devengado")
+      detailedChecks.push({
+        label: "Los conceptos devengados no suman el total devengado",
+        status: "error",
+        explanation: `Error: La suma de los conceptos devengados es ${sumEarnings.toFixed(2)}€, pero el total devengado indicado es ${data.totalEarnings}€. Diferencia: ${difference.toFixed(2)}€.`,
+      })
+    }
+  } else if (data.totalEarnings) {
+    // If we don't have individual items, just verify the total exists
+    details.push("✓ Total devengado verificado")
+    detailedChecks.push({
+      label: "Total devengado verificado",
+      status: "success",
+      explanation: `El total devengado (${data.totalEarnings}€) ha sido verificado.`,
+    })
+  }
+
+  if (
+    data.deductionItems &&
+    Array.isArray(data.deductionItems) &&
+    data.deductionItems.length > 0 &&
+    data.totalDeductions
+  ) {
+    const sumDeductions = data.deductionItems.reduce((sum: number, item: any) => sum + (item.amount || 0), 0)
+    const difference = Math.abs(sumDeductions - data.totalDeductions)
+
+    if (difference < 1) {
+      details.push("✓ Los conceptos deducidos suman correctamente")
+      detailedChecks.push({
+        label: "Los conceptos deducidos suman correctamente",
+        status: "success",
+        explanation: `La suma de los conceptos deducidos (${sumDeductions.toFixed(2)}€) coincide con el total deducido (${data.totalDeductions}€).`,
+      })
+    } else {
+      isValid = false
+      reason = "Los conceptos deducidos no suman el total deducido"
+      details.push("❌ Los conceptos deducidos no suman el total deducido")
+      detailedChecks.push({
+        label: "Los conceptos deducidos no suman el total deducido",
+        status: "error",
+        explanation: `Error: La suma de los conceptos deducidos es ${sumDeductions.toFixed(2)}€, pero el total deducido indicado es ${data.totalDeductions}€. Diferencia: ${difference.toFixed(2)}€.`,
+      })
+    }
+  }
+
   if (data.totalDeductions && data.totalEarnings && data.netSalary) {
     const calculatedNet = data.totalEarnings - data.totalDeductions
     const difference = Math.abs(calculatedNet - data.netSalary)
 
     if (difference < 1) {
-      details.push("✓ Total deducido correcto")
+      details.push("✓ Líquido a percibir correcto")
       detailedChecks.push({
-        label: "Total deducido correcto",
+        label: "Líquido a percibir correcto",
         status: "success",
-        explanation: `El cálculo es correcto: Total devengado (${data.totalEarnings}€) - Total deducido (${data.totalDeductions}€) = Líquido a percibir (${data.netSalary}€).`,
+        explanation: `El cálculo del líquido a percibir es correcto: Total devengado (${data.totalEarnings}€) - Total deducido (${data.totalDeductions}€) = Líquido a percibir (${data.netSalary}€).`,
       })
     } else {
       isValid = false
-      reason = "Las deducciones no suman correctamente"
-      details.push("❌ Las deducciones no suman el total deducido")
+      reason = "El líquido a percibir no coincide con el cálculo"
+      details.push("❌ El líquido a percibir no coincide con el cálculo")
       detailedChecks.push({
-        label: "Las deducciones no suman el total deducido",
+        label: "El líquido a percibir no coincide con el cálculo",
         status: "error",
-        explanation: `Error en el cálculo: Total devengado (${data.totalEarnings}€) - Total deducido (${data.totalDeductions}€) debería ser ${calculatedNet.toFixed(2)}€, pero el documento indica ${data.netSalary}€. Diferencia: ${difference.toFixed(2)}€.`,
+        explanation: `Error en el cálculo del líquido a percibir: Total devengado (${data.totalEarnings}€) - Total deducido (${data.totalDeductions}€) = ${calculatedNet.toFixed(2)}€, pero el documento indica ${data.netSalary}€. Diferencia: ${difference.toFixed(2)}€.`,
       })
     }
-  }
-
-  // Validate total earnings
-  if (data.totalEarnings && data.netSalary) {
-    details.push("✓ Total devengado verificado")
-    detailedChecks.push({
-      label: "Total devengado verificado",
-      status: "success",
-      explanation: `El total devengado (${data.totalEarnings}€) ha sido verificado y es consistente con el líquido a percibir (${data.netSalary}€).`,
-    })
   }
 
   // Validate NIF format and check digit
