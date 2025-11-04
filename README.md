@@ -16,7 +16,7 @@ Automatic validation system for Spanish payslips using AI to detect fraud and ve
 
 Create a `.env.local` file with the following variables:
 
-\`\`\`sh
+```bash
 # LandingAI Configuration
 LANDINGAI_API_KEY=your_landingai_api_key
 
@@ -25,7 +25,7 @@ AIORNOT_API_KEY=your_aiornot_api_key
 
 # API REST Configuration
 PAYROLL_API_KEY=your_secret_key_for_rest_api
-\`\`\`
+```
 
 ### Getting API Keys
 
