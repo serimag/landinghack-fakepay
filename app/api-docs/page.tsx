@@ -91,7 +91,7 @@ const translations = {
       fieldName: "Field",
       fieldType: "Type",
       fieldDesc: "Description",
-      fileDesc: "PDF, PNG or JPG file of the payslip (max 10MB)",
+      fileDesc: "PDF, PNG or JPG file of the pay stub (max 10MB)",
     },
     response: {
       title: "Response",
@@ -107,7 +107,7 @@ const translations = {
       docTypeDesc: "Detected document type",
       aiGenDesc: "Whether the document was generated/modified by AI",
       aiConfDesc: "AI detection confidence (0-1)",
-      extractedDesc: "Extracted payslip data",
+      extractedDesc: "Extracted pay stub data",
       validationsDesc: "List of performed validations",
       timestampDesc: "Verification date and time (ISO 8601)",
     },
@@ -156,13 +156,13 @@ export default function APIDocsPage() {
     setTimeout(() => setCopiedSection(null), 2000)
   }
 
-  const curlExample = `curl -X POST https://payshit.ai/api/v1/verify \\
+  const curlExample = `curl -X POST https://fakepay.ai/api/v1/verify \\
   -H "Authorization: Bearer your_api_key_here" \\
   -F "file=@/path/to/nomina.pdf"`
 
   const pythonExample = `import requests
 
-url = "https://payshit.ai/api/v1/verify"
+url = "https://fakepay.ai/api/v1/verify"
 headers = {
     "Authorization": "Bearer your_api_key_here"
 }
@@ -184,7 +184,7 @@ const fetch = require('node-fetch');
 const form = new FormData();
 form.append('file', fs.createReadStream('nomina.pdf'));
 
-const response = await fetch('https://payshit.ai/api/v1/verify', {
+const response = await fetch('https://fakepay.ai/api/v1/verify', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer your_api_key_here'
@@ -255,7 +255,7 @@ console.log('AI Generated:', result.aiGenerated);`
             <div>
               <h3 className="mb-2 font-semibold text-card-foreground">{t.quickStart.endpoint}</h3>
               <div className="rounded-lg bg-secondary/50 p-4 font-mono text-sm">
-                <span className="text-green-500">POST</span> https://payshit.ai/api/v1/verify
+                <span className="text-green-500">POST</span> https://fakepay.ai/api/v1/verify
               </div>
             </div>
             <div>

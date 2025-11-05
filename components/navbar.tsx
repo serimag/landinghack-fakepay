@@ -41,7 +41,7 @@ export function Navbar({ language, onLanguageChange, showApiButton = true }: Nav
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
             <Link href="/" className="font-mono text-xl font-bold text-foreground hover:text-primary transition-colors">
-              payshit.ai
+              fakepay.ai
             </Link>
           </div>
 

@@ -9,7 +9,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "payshit.ai | Verificación de Nóminas con IA",
+  title: "fakepay.ai | Verificación de Nóminas con IA",
   description: "Detecta nóminas fraudulentas con inteligencia artificial",
   generator: "v0.app",
 }

@@ -42,20 +42,20 @@ const translations = {
     previewButton: "View document",
     examples: {
       payslipOk: {
-        title: "Payslip OK",
+        title: "Pay Stub OK",
         description: "Valid document without errors",
       },
       payslipFakeData: {
-        title: "Payslip KO - Fake Data",
+        title: "Pay Stub KO - Fake Data",
         description: "Manually modified data",
       },
       payslipAiGenerated: {
-        title: "Payslip KO - AI Generated",
+        title: "Pay Stub KO - AI Generated",
         description: "Artificially created document",
       },
       notPayslip: {
-        title: "Payslip KO - Not a Payslip",
-        description: "Document is not a payslip",
+        title: "Pay Stub KO - Not a Pay Stub",
+        description: "Document is not a pay stub",
       },
     },
   },

@@ -1,12 +1,12 @@
-# payshit.ai - Payroll Verification
+# fakepay.ai - Payroll Verification
 
-Automatic validation system for Spanish payslips using AI to detect fraud and verify authenticity.
+Automatic validation system for Spanish pay stubs using AI to detect fraud and verify authenticity.
 
 ## Features
 
 - 📄 **Document Classification**: Automatically identifies document type using LandingAI
 - 🤖 **AI Detection**: Detects if the document has been generated or manipulated by AI using AIorNOT
-- 📊 **Data Extraction**: Extracts key information from payslips
+- 📊 **Data Extraction**: Extracts key information from pay stubs
 - ✅ **Automatic Validation**: Verifies dates, NIF/CIF formats, and payroll calculations
 - 🔌 **REST API**: Integrate verification into your applications via API
 
@@ -16,7 +16,7 @@ Automatic validation system for Spanish payslips using AI to detect fraud and ve
 
 Create a `.env.local` file with the following variables:
 
-```bash
+\`\`\`bash
 # LandingAI Configuration
 LANDINGAI_API_KEY=your_landingai_api_key
 
@@ -25,7 +25,7 @@ AIORNOT_API_KEY=your_aiornot_api_key
 
 # API REST Configuration
 PAYROLL_API_KEY=your_secret_key_for_rest_api
-```
+\`\`\`
 
 ### Getting API Keys
 
@@ -35,7 +35,7 @@ PAYROLL_API_KEY=your_secret_key_for_rest_api
 
 ## Installation
 
-```bash
+\`\`\`bash
 # Install dependencies
 npm install
 
@@ -44,15 +44,15 @@ npm run dev
 
 # Build for production
 npm run build
-```
+\`\`\`
 
 ## Usage
 
 ### Web Interface
 
 1. Access the application
-2. Drag or select a payslip file (PDF, PNG, JPG)
-3. Click "Verify Payslip"
+2. Drag or select a pay stub file (PDF, PNG, JPG)
+3. Click "Verify Pay Stub"
 4. The system will process the document in 4 steps:
    - Document classification
    - AI manipulation detection
@@ -66,11 +66,11 @@ Check the complete API documentation at `/api-docs` or visit the "API" button in
 
 **Basic example:**
 
-```bash
-curl -X POST https://payshit.ai/api/v1/verify \
+\`\`\`bash
+curl -X POST https://fakepay.ai/api/v1/verify \
   -H "Authorization: Bearer your_api_key" \
-  -F "file=@payslip.pdf"
-```
+  -F "file=@paystub.pdf"
+\`\`\`
 
 ## Security
 

@@ -54,7 +54,7 @@ const translations = {
       title: "Detecta",
       titleAccent: "Nóminas falsas",
       titleEnd: "con IA.",
-      subtitle: "Utiliza Payshit.ai para detectar nóminas que hayan sido modificadas usando IA y otros métodos.",
+      subtitle: "Utiliza Fakepay.ai para detectar nóminas que hayan sido modificadas usando IA y otros métodos.",
     },
     upload: {
       title: "Cargar Documento",
@@ -95,26 +95,26 @@ const translations = {
     },
     checks: {
       labels: {
-        "Documento identificado como: nomina": "Document identified as: payslip",
-        "No se detectó manipulación por IA": "No AI manipulation detected",
-        "Fecha de nómina válida": "Valid payslip date",
-        "Fecha de nómina no válida": "Invalid payslip date",
-        "Nómina con más de 3 meses de antigüedad": "Payslip older than 3 months",
-        "Periodo de liquidación válido": "Valid settlement period",
-        "Periodo de liquidación anterior a la antigüedad": "Settlement period before seniority date",
-        "Los conceptos devengados suman correctamente": "Earning items sum correctly",
-        "Los conceptos devengados no suman el total devengado": "Earning items don't match total earnings",
-        "Los conceptos deducidos suman correctamente": "Deduction items sum correctly",
-        "Los conceptos deducidos no suman el total deducido": "Deduction items don't match total deductions",
-        "Líquido a percibir correcto": "Net salary correct",
-        "El líquido a percibir no coincide con el cálculo": "Net salary doesn't match calculation",
-        "Total devengado verificado": "Total earnings verified",
-        "NIF de empleado válido": "Valid employee ID",
-        "NIF de empleado inválido": "Invalid employee ID",
-        "Formato de NIF inválido": "Invalid ID format",
-        "CIF de empresa válido": "Valid company tax ID",
-        "Formato de CIF inválido": "Invalid tax ID format",
-        "No se pudo validar el periodo de liquidación": "Could not validate settlement period",
+        "Documento identificado como: nomina": "Documento identificado como: nomina",
+        "No se detectó manipulación por IA": "No se detectó manipulación por IA",
+        "Fecha de nómina válida": "Fecha de nómina válida",
+        "Fecha de nómina no válida": "Fecha de nómina no válida",
+        "Nómina con más de 3 meses de antigüedad": "Nómina con más de 3 meses de antigüedad",
+        "Periodo de liquidación válido": "Periodo de liquidación válido",
+        "Periodo de liquidación anterior a la antigüedad": "Periodo de liquidación anterior a la antigüedad",
+        "Los conceptos devengados suman correctamente": "Los conceptos devengados suman correctamente",
+        "Los conceptos devengados no suman el total devengado": "Los conceptos devengados no suman el total devengado",
+        "Los conceptos deducidos suman correctamente": "Los conceptos deducidos suman correctamente",
+        "Los conceptos deducidos no suman el total deducido": "Los conceptos deducidos no suman el total deducido",
+        "Líquido a percibir correcto": "Líquido a percibir correcto",
+        "El líquido a percibir no coincide con el cálculo": "El líquido a percibir no coincide con el cálculo",
+        "Total devengado verificado": "Total devengado verificado",
+        "NIF de empleado válido": "NIF de empleado válido",
+        "NIF de empleado inválido": "NIF de empleado inválido",
+        "Formato de NIF inválido": "Formato de NIF inválido",
+        "CIF de empresa válido": "CIF de empresa válido",
+        "Formato de CIF inválido": "Formato de CIF inválido",
+        "No se pudo validar el periodo de liquidación": "No se pudo validar el periodo de liquidación",
       },
     },
     fields: {
@@ -133,22 +133,22 @@ const translations = {
   en: {
     hero: {
       title: "Detect",
-      titleAccent: "Fake Payslips",
+      titleAccent: "Fake Pay Stubs",
       titleEnd: "with AI.",
-      subtitle: "Use Payshit.ai to detect payslips that have been modified using AI and other methods.",
+      subtitle: "Use Fakepay.ai to detect pay stubs that have been modified using AI and other methods.",
     },
     upload: {
       title: "Upload Document",
-      description: "Upload a payslip in PDF, PNG or JPG format to verify its authenticity",
+      description: "Upload a pay stub in PDF, PNG or JPG format to verify its authenticity",
       dragText: "Drag your file here",
       clickText: "or click to select",
       selectButton: "Select file",
-      verifyButton: "Verify Payslip",
+      verifyButton: "Verify Pay Stub",
       cancelButton: "Cancel",
     },
     processing: {
       title: "Verifying Document",
-      description: "Please wait while we analyze your payslip",
+      description: "Please wait while we analyze your pay stub",
       steps: {
         classifying: "Classification",
         aiDetection: "GenAI Check",
@@ -162,13 +162,13 @@ const translations = {
       },
     },
     results: {
-      valid: "Payslip OK",
+      valid: "Pay Stub OK",
       fraudulent: "Fraudulent Document",
       invalid: "Invalid Document",
-      validDesc: "The payslip has passed all verifications",
+      validDesc: "The pay stub has passed all verifications",
       checksTitle: "Checks Performed",
       extractedTitle: "Extracted Data",
-      verifyAnother: "Verify Another Payslip",
+      verifyAnother: "Verify Another Pay Stub",
       viewDocument: "View Document",
       aiBreakdownTitle: "AI Analysis",
       aiClass: "Class",
@@ -176,11 +176,11 @@ const translations = {
     },
     checks: {
       labels: {
-        "Documento identificado como: nomina": "Document identified as: payslip",
+        "Documento identificado como: nomina": "Document identified as: pay stub",
         "No se detectó manipulación por IA": "No AI manipulation detected",
-        "Fecha de nómina válida": "Valid payslip date",
-        "Fecha de nómina no válida": "Invalid payslip date",
-        "Nómina con más de 3 meses de antigüedad": "Payslip older than 3 months",
+        "Fecha de nómina válida": "Valid pay stub date",
+        "Fecha de nómina no válida": "Invalid pay stub date",
+        "Nómina con más de 3 meses de antigüedad": "Pay stub older than 3 months",
         "Periodo de liquidación válido": "Valid settlement period",
         "Periodo de liquidación anterior a la antigüedad": "Settlement period before seniority date",
         "Los conceptos devengados suman correctamente": "Earning items sum correctly",
@@ -523,6 +523,10 @@ export default function PayrollVerificationPage() {
     // Handle dynamic labels like "Documento identificado como: unknown"
     if (label.startsWith("Documento identificado como:")) {
       const docType = label.split(":")[1]?.trim()
+      // Translate common document types
+      if (docType === "nomina") {
+        return "Document identified as: pay stub"
+      }
       return `Document identified as: ${docType}`
     }
 
@@ -538,15 +542,18 @@ export default function PayrollVerificationPage() {
   const translateExplanation = (explanation: string, label: string): string => {
     if (language === "es") return explanation
 
-    // Translate common patterns in explanations
+    // Comprehensive translation map for all backend Spanish strings
     const translations: Record<string, string> = {
-      "El documento contiene los campos requeridos de una nómina": "The document contains the required payslip fields",
+      // Document classification
+      "El documento contiene los campos requeridos de una nómina": "The document contains the required pay stub fields",
       "nombre del empleado": "employee name",
       empresa: "company",
       "datos salariales": "salary data",
       "El sistema ha analizado el documento y lo ha clasificado como":
         "The system has analyzed the document and classified it as",
       "con una confianza del": "with a confidence of",
+
+      // AI detection
       "El análisis de AIorNOT ha detectado que este documento tiene una probabilidad del":
         "AI or NOT analysis has detected that this document has a probability of",
       "de haber sido generado o manipulado por inteligencia artificial":
@@ -555,12 +562,18 @@ export default function PayrollVerificationPage() {
         "AI or NOT analysis indicates that this document has a very low probability",
       "de haber sido generado o manipulado por IA. El documento parece ser auténtico":
         "of having been generated or manipulated by AI. The document appears to be authentic",
-      "La fecha de la nómina": "The payslip date",
+      "El análisis de IA no está disponible para este tipo de archivo":
+        "AI analysis is not available for this file type",
+
+      // Date validation
+      "La fecha de la nómina": "The pay stub date",
       "está dentro del rango válido de los últimos 3 meses": "is within the valid range of the last 3 months",
       "es posterior a la fecha actual. Las nóminas no pueden tener fechas futuras":
-        "is after the current date. Payslips cannot have future dates",
+        "is after the current date. Pay stubs cannot have future dates",
       "es anterior a 3 meses desde hoy. Solo se aceptan nóminas de los últimos 3 meses":
-        "is more than 3 months old. Only payslips from the last 3 months are accepted",
+        "is more than 3 months old. Only pay stubs from the last 3 months are accepted",
+
+      // Settlement period validation
       "El periodo de liquidación": "The settlement period",
       "es posterior a la fecha de antigüedad del empleado": "is after the employee's seniority date",
       "es igual o posterior a la fecha de antigüedad del empleado":
@@ -569,14 +582,20 @@ export default function PayrollVerificationPage() {
       "es anterior a la fecha de antigüedad del empleado": "is before the employee's seniority date",
       "Esto es imposible ya que el empleado no trabajaba en la empresa en ese periodo":
         "This is impossible as the employee was not working at the company during that period",
+
+      // Earnings validation
       "La suma de los conceptos devengados": "The sum of earning items",
       "coincide con el total devengado": "matches the total earnings",
       "Error: La suma de los conceptos devengados es": "Error: The sum of earning items is",
       "pero el total devengado indicado es": "but the total earnings shown is",
+
+      // Deductions validation
       "La suma de los conceptos deducidos": "The sum of deduction items",
       "coincide con el total deducido": "matches the total deductions",
       "Error: La suma de los conceptos deducidos es": "Error: The sum of deduction items is",
       "pero el total deducido indicado es": "but the total deductions shown is",
+
+      // Net salary validation
       "El cálculo es correcto: Total devengado": "The calculation is correct: Total earnings",
       "El cálculo del líquido a percibir es correcto: Total devengado":
         "The net salary calculation is correct: Total earnings",
@@ -587,10 +606,14 @@ export default function PayrollVerificationPage() {
       "debería ser": "should be",
       "pero el documento indica": "but the document shows",
       Diferencia: "Difference",
+
+      // Total earnings verification
       "El total devengado": "The total earnings",
       "ha sido verificado y es consistente con el líquido a percibir":
         "has been verified and is consistent with the net salary",
       "ha sido verificado": "has been verified",
+
+      // NIF validation
       "El NIF del empleado": "The employee's ID",
       "tiene un formato correcto y el dígito de control es válido":
         "has a correct format and the control digit is valid",
@@ -598,11 +621,15 @@ export default function PayrollVerificationPage() {
       "en lugar de": "instead of",
       "no tiene el formato correcto. Debe ser 8 dígitos seguidos de una letra mayúscula":
         "does not have the correct format. It must be 8 digits followed by an uppercase letter",
+
+      // CIF validation
       "El CIF de la empresa": "The company's tax ID",
       "tiene un formato válido: letra inicial seguida de 7 dígitos y un dígito de control":
         "has a valid format: initial letter followed by 7 digits and a control digit",
       "no tiene el formato correcto. Debe ser una letra mayúscula seguida de 7 dígitos y un dígito de control":
         "does not have the correct format. It must be an uppercase letter followed by 7 digits and a control digit",
+
+      // Settlement period validation warning
       "No se pudo validar la relación entre el periodo de liquidación":
         "Could not validate the relationship between the settlement period",
       "y la fecha de antigüedad": "and the seniority date",
@@ -610,6 +637,8 @@ export default function PayrollVerificationPage() {
     }
 
     let translated = explanation
+
+    // Apply all translations
     for (const [spanish, english] of Object.entries(translations)) {
       translated = translated.replace(new RegExp(spanish, "g"), english)
     }
@@ -644,30 +673,34 @@ export default function PayrollVerificationPage() {
 
     // Fallback to original reason (translated) or generic message
     if (result.reason) {
-      // Try exact match first
-      if (language === "en") {
-        // Try exact match first
-        if (result.reason === "El documento no es una nómina válida") {
-          return "The document is not a valid payslip"
-        }
-        if (result.reason === "El documento no contiene los campos requeridos de una nómina") {
-          return "The document does not contain the required payslip fields"
-        }
-        if (result.reason === "No se pudo clasificar el documento") {
-          return "Could not classify the document"
-        }
-        if (result.reason === "El documento ha sido generado o manipulado por IA") {
-          return "The document has been generated or manipulated by AI"
-        }
-        if (result.reason === "Error al procesar el documento") {
-          return "Error processing the document"
-        }
+      // Translate common reason strings
+      const reasonTranslations: Record<string, string> = {
+        "El documento no es una nómina válida": "The document is not a valid pay stub",
+        "El documento no contiene los campos requeridos de una nómina":
+          "The document does not contain the required pay stub fields",
+        "No se pudo clasificar el documento": "Could not classify the document",
+        "El documento ha sido generado o manipulado por IA": "The document has been generated or manipulated by AI",
+        "Se detectó manipulación por IA en el documento": "AI manipulation detected in the document",
+        "Error al procesar el documento": "Error processing the document",
+        "Fecha de nómina futura no válida": "Invalid future pay stub date",
+        "Nómina con más de 3 meses de antigüedad": "Pay stub older than 3 months",
+        "El periodo de liquidación es anterior a la fecha de antigüedad": "Settlement period is before seniority date",
+        "Los conceptos devengados no suman el total devengado": "Earning items don't match total earnings",
+        "Los conceptos deducidos no suman el total deducido": "Deduction items don't match total deductions",
+        "El líquido a percibir no coincide con el cálculo": "Net salary doesn't match calculation",
+        "NIF de empleado inválido": "Invalid employee ID",
+        "Formato de NIF inválido": "Invalid ID format",
+        "Formato de CIF inválido": "Invalid tax ID format",
+      }
+
+      if (language === "en" && reasonTranslations[result.reason]) {
+        return reasonTranslations[result.reason]
       }
       return result.reason
     }
 
     // Generic fallback message
-    return language === "es" ? "El documento no es una nómina válida" : "The document is not a valid payslip"
+    return language === "es" ? "El documento no es una nómina válida" : "The document is not a valid pay stub"
   }
 
   const handleLanguageChange = (lang: "es" | "en") => {
