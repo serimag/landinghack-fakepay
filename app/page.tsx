@@ -273,15 +273,25 @@ export default function PayrollVerificationPage() {
     const exampleFileName = sessionStorage.getItem("exampleFileName")
 
     if (exampleFilePath && exampleFileName) {
-      // Fetch the file directly from the path
+      console.log("[v0] Loading example file:", exampleFilePath)
+
       fetch(exampleFilePath)
         .then((res) => {
+          console.log("[v0] Example file fetch response:", res.status, res.statusText)
           if (!res.ok) {
-            throw new Error(`Failed to fetch file: ${res.statusText}`)
+            if (res.status === 404) {
+              throw new Error(
+                language === "es"
+                  ? `Archivo de ejemplo no encontrado: ${exampleFilePath}. Por favor, añade los archivos PDF de ejemplo a la carpeta public/examples/`
+                  : `Example file not found: ${exampleFilePath}. Please add example PDF files to the public/examples/ folder`,
+              )
+            }
+            throw new Error(`Failed to fetch file: ${res.status} ${res.statusText}`)
           }
           return res.blob()
         })
         .then((blob) => {
+          console.log("[v0] Example file loaded successfully, size:", blob.size)
           const file = new File([blob], exampleFileName, { type: "application/pdf" })
           setFile(file)
           setShowFilePreview(true)
@@ -291,14 +301,18 @@ export default function PayrollVerificationPage() {
         })
         .catch((error) => {
           console.error("[v0] Error loading example file:", error)
-          setError(language === "es" ? "Error al cargar el archivo de ejemplo" : "Error loading example file")
+          setError(
+            error.message ||
+              (language === "es" ? "Error al cargar el archivo de ejemplo" : "Error loading example file"),
+          )
+          setVerificationStatus("error")
         })
         .finally(() => {
           sessionStorage.removeItem("exampleFilePath")
           sessionStorage.removeItem("exampleFileName")
         })
     }
-  }, [])
+  }, [language])
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
