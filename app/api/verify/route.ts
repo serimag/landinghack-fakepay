@@ -29,6 +29,15 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File | null
     const originalFile = formData.get("originalFile") as File | null
 
+    console.log(
+      "[v0] Received files - file:",
+      file?.name,
+      file?.type,
+      "originalFile:",
+      originalFile?.name,
+      originalFile?.type,
+    )
+
     if (!file && !originalFile) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 })
     }
@@ -44,10 +53,20 @@ export async function POST(request: NextRequest) {
     let aiBreakdown: VerificationResult["aiBreakdown"] | undefined
 
     const fileForExtraction = originalFile || file!
-    const fileForAI = file // This will be the image (converted in frontend if PDF) or null if conversion failed
+    const fileForAI = file
 
     console.log("[v0] File for AI detection:", fileForAI ? `${fileForAI.type} ${fileForAI.size}` : "none")
     console.log("[v0] File for extraction:", fileForExtraction.type, fileForExtraction.size)
+
+    if (fileForExtraction.size === 0) {
+      console.error("[v0] File is empty")
+      return NextResponse.json({ error: "File is empty" }, { status: 400 })
+    }
+
+    if (fileForExtraction.size > 10 * 1024 * 1024) {
+      console.error("[v0] File is too large:", fileForExtraction.size)
+      return NextResponse.json({ error: "File is too large (max 10MB)" }, { status: 400 })
+    }
 
     const extractedData = await extractPayrollData(fileForExtraction)
 
@@ -135,10 +154,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result)
   } catch (error) {
     console.error("[v0] Verification error:", error)
+    const errorMessage = error instanceof Error ? error.message : "Unknown error"
+    const errorStack = error instanceof Error ? error.stack : undefined
+
+    console.error("[v0] Error stack:", errorStack)
+
     return NextResponse.json(
       {
         error: "Error processing document",
-        details: error instanceof Error ? error.message : "Unknown error",
+        details: errorMessage,
+        message: errorMessage,
       },
       { status: 500 },
     )

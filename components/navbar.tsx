@@ -57,19 +57,12 @@ export function Navbar({ language, onLanguageChange, showApiButton = true }: Nav
             {showApiButton && (
               <div className="relative">
                 <Badge
-                  variant="secondary"
-                  className="absolute -top-3 right-0 translate-x-1/2 z-10 text-[10px] px-1.5 py-0.5 pointer-events-none bg-primary text-primary-foreground hover:bg-primary"
+                  variant="outline"
+                  className="absolute -top-2 -right-1 z-10 text-[9px] px-1 py-0 h-4 pointer-events-none bg-background/60 backdrop-blur-sm border-red-500 text-red-500 font-medium"
                 >
                   {t.soon}
                 </Badge>
-                <Link
-                  href="/api-docs"
-                  className={`text-sm font-medium transition-colors hover:text-primary ${
-                    pathname === "/api-docs" ? "text-foreground" : "text-muted-foreground"
-                  }`}
-                >
-                  {t.api}
-                </Link>
+                <span className="text-sm font-medium text-muted-foreground cursor-not-allowed opacity-60">{t.api}</span>
               </div>
             )}
           </div>

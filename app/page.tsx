@@ -54,7 +54,8 @@ const translations = {
       title: "Detecta",
       titleAccent: "Nóminas falsas",
       titleEnd: "con IA.",
-      subtitle: "Utiliza Fakepay.ai para detectar nóminas que hayan sido modificadas usando IA y otros métodos.",
+      subtitle:
+        "Utiliza Fakepay.ai para detectar nóminas que hayan sido modificadas o generadas usando IA y otras técnicas fraudulentas.",
     },
     upload: {
       title: "Cargar Documento",
@@ -135,7 +136,8 @@ const translations = {
       title: "Detect",
       titleAccent: "Fake Pay Stubs",
       titleEnd: "with AI.",
-      subtitle: "Use Fakepay.ai to detect pay stubs that have been modified using AI and other methods.",
+      subtitle:
+        "Use Fakepay.ai to detect pay stubs that have been modified or generated using AI and other fraudulent techniques.",
     },
     upload: {
       title: "Upload Document",
@@ -335,6 +337,8 @@ export default function PayrollVerificationPage() {
     const targetFile = fileToVerify || file
     if (!targetFile) return
 
+    console.log("[v0] Starting verification for file:", targetFile.name, targetFile.type, targetFile.size)
+
     const url = URL.createObjectURL(targetFile)
     setDocumentUrl(url)
 
@@ -345,6 +349,16 @@ export default function PayrollVerificationPage() {
 
     try {
       const formData = new FormData()
+
+      if (targetFile.size === 0) {
+        throw new Error(language === "es" ? "El archivo está vacío" : "The file is empty")
+      }
+
+      if (targetFile.size > 10 * 1024 * 1024) {
+        throw new Error(
+          language === "es" ? "El archivo es demasiado grande (máximo 10MB)" : "File is too large (max 10MB)",
+        )
+      }
 
       if (targetFile.type === "application/pdf") {
         console.log("[v0] PDF detected, converting to image for AI detection")
@@ -382,15 +396,23 @@ export default function PayrollVerificationPage() {
       }
 
       setCurrentStep("validating")
+
+      console.log("[v0] Sending request to /api/verify")
       const response = await fetch("/api/verify", {
         method: "POST",
         body: formData,
       })
 
+      console.log("[v0] Response status:", response.status)
+      console.log("[v0] Response headers:", Object.fromEntries(response.headers.entries()))
+
       const contentType = response.headers.get("content-type")
+      console.log("[v0] Content-Type:", contentType)
+
       if (!contentType || !contentType.includes("application/json")) {
         const textResponse = await response.text()
-        console.error("[v0] Non-JSON response:", textResponse)
+        console.error("[v0] Non-JSON response received:")
+        console.error("[v0] Response text:", textResponse.substring(0, 500))
         throw new Error(
           language === "es" ? "Error del servidor: respuesta no válida" : "Server error: invalid response",
         )
@@ -398,10 +420,12 @@ export default function PayrollVerificationPage() {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || "Error al verificar el documento")
+        console.error("[v0] API error response:", errorData)
+        throw new Error(errorData.error || errorData.message || "Error al verificar el documento")
       }
 
       const data: VerificationResult = await response.json()
+      console.log("[v0] Verification result:", data)
 
       await new Promise((resolve) => setTimeout(resolve, 1500))
 
@@ -739,7 +763,7 @@ export default function PayrollVerificationPage() {
               <h1 className="font-mono text-5xl font-bold leading-tight tracking-tight text-foreground md:text-6xl text-left mb-6 lg:text-7xl">
                 {t.hero.title} <span className="text-primary">{t.hero.titleAccent}</span> {t.hero.titleEnd}
               </h1>
-              <p className="text-lg leading-relaxed text-muted-foreground md:text-xl px-0 mx-0 leading-7 text-justify">
+              <p className="text-lg leading-relaxed text-muted-foreground md:text-xl px-0 mx-0 leading-7 text-justify max-w-xl">
                 {t.hero.subtitle}
               </p>
             </div>
