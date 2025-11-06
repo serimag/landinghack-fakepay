@@ -585,7 +585,16 @@ export default function PayrollVerificationPage() {
       // Document classification
       "El documento contiene los campos requeridos de una nómina": "The document contains the required pay stub fields",
       "nombre del empleado": "employee name",
-      empresa: "company",
+      
+      // CIF validation
+      "El CIF de la empresa": "The company's tax ID",
+      "tiene un formato válido: letra inicial seguida de 7 dígitos y un dígito de control":
+        "has a valid format: initial letter followed by 7 digits and a control digit",
+      "no tiene el formato correcto. Debe ser una letra mayúscula seguida de 7 dígitos y un dígito de control":
+        "does not have the correct format. It must be an uppercase letter followed by 7 digits and a control digit",
+      "Esto es imposible ya que el empleado no trabajaba en la empresa en ese periodo":
+        "This is impossible as the employee was not working at the company during that period",
+      "empresa": "company",
       "datos salariales": "salary data",
       "El sistema ha analizado el documento y lo ha clasificado como":
         "The system has analyzed the document and classified it as",
@@ -618,8 +627,7 @@ export default function PayrollVerificationPage() {
         "is equal to or after the employee's seniority date",
       "lo cual es correcto": "which is correct",
       "es anterior a la fecha de antigüedad del empleado": "is before the employee's seniority date",
-      "Esto es imposible ya que el empleado no trabajaba en la empresa en ese periodo":
-        "This is impossible as the employee was not working at the company during that period",
+      
 
       // Earnings validation
       "La suma de los conceptos devengados": "The sum of earning items",
@@ -643,7 +651,7 @@ export default function PayrollVerificationPage() {
       "Error en el cálculo del líquido a percibir: Total devengado": "Error in net salary calculation: Total earnings",
       "debería ser": "should be",
       "pero el documento indica": "but the document shows",
-      Diferencia: "Difference",
+      "Diferencia": "Difference",
 
       // Total earnings verification
       "El total devengado": "The total earnings",
@@ -660,12 +668,7 @@ export default function PayrollVerificationPage() {
       "no tiene el formato correcto. Debe ser 8 dígitos seguidos de una letra mayúscula":
         "does not have the correct format. It must be 8 digits followed by an uppercase letter",
 
-      // CIF validation
-      "El CIF de la empresa": "The company's tax ID",
-      "tiene un formato válido: letra inicial seguida de 7 dígitos y un dígito de control":
-        "has a valid format: initial letter followed by 7 digits and a control digit",
-      "no tiene el formato correcto. Debe ser una letra mayúscula seguida de 7 dígitos y un dígito de control":
-        "does not have the correct format. It must be an uppercase letter followed by 7 digits and a control digit",
+      
 
       // Settlement period validation warning
       "No se pudo validar la relación entre el periodo de liquidación":
