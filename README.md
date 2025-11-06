@@ -21,7 +21,7 @@ We're based in Barcelona, founded in 2007 and a strong expertise in NLP and Comp
 - 🤖 **AI Detection**: Detects if the document has been generated or manipulated by AI using AIorNOT
 - 📊 **Data Extraction**: Extracts key information from pay stubs - Extract API
 - ✅ **Automatic Validation**: Verifies dates, NIF/CIF formats, and internal earnings calculations
-- 🔌 **REST API**: Integrate verification into your applications via API
+- 🔌 **REST API**: Integrate verification into your applications via API (coming soon)
 
 ## Configuration
 
