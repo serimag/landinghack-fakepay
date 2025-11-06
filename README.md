@@ -1,13 +1,26 @@
 # fakepay.ai - Pay Stubs Verification
 
-Automatic validation system for Spanish pay stubs using AI to detect fraud and verify authenticity.
+Summary --> Automatic validation system for Spanish pay stubs using AI to detect fraud and verify authenticity.
 
-## Features
+**Why FakePay?**
 
-- 📄 **Document Classification**: Automatically identifies document type using LandingAI
+With the rise of GenAI applications the risk of GenAI-driven fraud in document forging is exploding, and we want to help clients in the financial services industry to tackle these kinds of risks. 
+
+Our vision is to create an easy to deploy API that can be included in current IDP processes in order to give a reliable OK / KO. For now we've create a first version with a web-app demo and focused in Spanish Pay Stubs. 
+
+**About Us**
+
+We're the leading company providing Intelligent Document Processing services in Spain, focused in the banking industry processing >1 million pages per day. 
+
+We're based in Barcelona, founded in 2007 and a strong expertise in NLP and Computer Vision. 
+
+
+## FakePay Features
+
+- 📄 **Document Classification**: Automatically identifies document type using LandingAI - Parse API
 - 🤖 **AI Detection**: Detects if the document has been generated or manipulated by AI using AIorNOT
-- 📊 **Data Extraction**: Extracts key information from pay stubs
-- ✅ **Automatic Validation**: Verifies dates, NIF/CIF formats, and payroll calculations
+- 📊 **Data Extraction**: Extracts key information from pay stubs - Extract API
+- ✅ **Automatic Validation**: Verifies dates, NIF/CIF formats, and internal earnings calculations
 - 🔌 **REST API**: Integrate verification into your applications via API
 
 ## Configuration
