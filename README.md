@@ -1,4 +1,4 @@
-# fakepay.ai - Payroll Verification
+# fakepay.ai - Pay Stubs Verification
 
 Automatic validation system for Spanish pay stubs using AI to detect fraud and verify authenticity.
 
@@ -88,10 +88,6 @@ curl -X POST https://fakepay.ai/api/v1/verify \
 - **LandingAI**: Document classification and extraction
 - **AIorNOT**: AI-generated content detection
 
-## Development Mode
+From here we'd like to keep working to add more documents, user management and a fremium model through token purchase and create a FakePay API.
 
-If you don't have the API keys configured, the system will work in development mode with simulated data so you can test the interface.
 
-## License
-
-MIT
