@@ -16,7 +16,7 @@ Automatic validation system for Spanish pay stubs using AI to detect fraud and v
 
 Create a `.env.local` file with the following variables:
 
-\`\`\`bash
+```bash
 # LandingAI Configuration
 LANDINGAI_API_KEY=your_landingai_api_key
 
@@ -25,7 +25,7 @@ AIORNOT_API_KEY=your_aiornot_api_key
 
 # API REST Configuration
 PAYROLL_API_KEY=your_secret_key_for_rest_api
-\`\`\`
+```
 
 ### Getting API Keys
 
@@ -35,7 +35,7 @@ PAYROLL_API_KEY=your_secret_key_for_rest_api
 
 ## Installation
 
-\`\`\`bash
+```bash
 # Install dependencies
 npm install
 
@@ -44,7 +44,7 @@ npm run dev
 
 # Build for production
 npm run build
-\`\`\`
+```
 
 ## Usage
 
@@ -60,22 +60,22 @@ npm run build
    - Information validation
 5. Review the results and verification status
 
-### REST API
+### REST API (Coming soon)
 
 Check the complete API documentation at `/api-docs` or visit the "API" button in the web interface.
 
 **Basic example:**
 
-\`\`\`bash
+```bash
 curl -X POST https://fakepay.ai/api/v1/verify \
   -H "Authorization: Bearer your_api_key" \
   -F "file=@paystub.pdf"
-\`\`\`
+```
 
 ## Security
 
 - LandingAI and AIorNOT API keys are stored as environment variables and never exposed to the client
-- REST API requires authentication via Bearer token
+- REST API requires authentication via Bearer token (Coming soon)
 - All API keys must be configured through environment variables
 - Do not include `.env.local` files in version control
 
