@@ -51,6 +51,7 @@ Score & summarize → risk_score + NL summary
 Render full report in UI 
 ↓
 User can repeat / upload next document
+```
 
 ## Configuration
 
@@ -147,7 +148,6 @@ curl -X POST https://fakepay.ai/api/v1/verify \
 - **AIorNOT**: AI-generated content detection
 
 ## What’s next
-
 
 📄 New document types: bank statements, employment contracts, proof of address
 
