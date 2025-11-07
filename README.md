@@ -1,12 +1,12 @@
-# fakepay.ai - Pay Stubs Verification
+# 🚀fakepay.ai - Pay Stubs Verification
 
 Automatic validation system for Spanish pay stubs using AI to detect fraud and verify authenticity.
 
 Web Demo: https://fakepay-landing.vercel.app/ 
 
 Video Demo: https://www.youtube.com/watch?v=-vNP2rP7Kvs
-[![](https://markdown-videos.data.dev/youtube/-vNP2rP7Kvs)](https://youtu.be/-vNP2rP7Kvs)
 
+---
 **Why FakePay?**
 
 With the rise of GenAI applications the risk of GenAI-driven fraud in document forging is exploding, and we want to help clients in the financial services industry to tackle these kinds of risks. 
@@ -19,8 +19,8 @@ We're the leading company providing Intelligent Document Processing services in 
 
 We're based in Barcelona, founded in 2007 and a strong expertise in NLP and Computer Vision. 
 
-
-## FakePay Features
+---
+## ✨FakePay Features
 
 - 📄 **Document Classification**: Automatically identifies document type using LandingAI - Parse API
 - 🤖 **AI Detection**: Detects if the document has been generated or manipulated by AI using AIorNOT
@@ -54,8 +54,8 @@ Render full report in UI
 ↓
 User can repeat / upload next document
 ```
-
-## Configuration
+---
+## :gear:Configuration
 
 ### Environment Variables
 
@@ -71,6 +71,7 @@ AIORNOT_API_KEY=your_aiornot_api_key
 # API REST Configuration
 PAYROLL_API_KEY=your_secret_key_for_rest_api
 ```
+
 Notes
 
 Classification: Gemini 2.5 is used to validate that the content matches a Spanish pay stub (or other supported type) before deep extraction.
@@ -85,7 +86,8 @@ Privacy: all artifacts stay within the data_rooms/ sandbox during the session un
 2. **AIorNOT**: Get your API key at [aiornot.com](https://aiornot.com)
 3. **PAYROLL_API_KEY**: Generate a secure key to protect your REST API
 
-## ⚙️ Key Features
+---
+##  ⚙️Key Features
 
 | Feature | Description |
 |----------|--------------|
@@ -93,8 +95,8 @@ Privacy: all artifacts stay within the data_rooms/ sandbox during the session un
 | **AI or NOT** | GenAI generated image detector through API |
 | **Gemini 2.5** | LLM to classify the documents based on their content. |
 
-
-## Installation
+---
+## 📥Installation
 
 ```bash
 # Install dependencies
@@ -106,8 +108,8 @@ npm run dev
 # Build for production
 npm run build
 ```
-
-## Usage
+---
+## 📦Usage
 
 ### Web Interface
 
@@ -120,8 +122,8 @@ npm run build
    - Data extraction
    - Information validation
 5. Review the results and verification status
-
-### REST API (Coming soon)
+---
+### ⏳REST API (Coming soon)
 
 Check the complete API documentation at `/api-docs` or visit the "API" button in the web interface.
 
@@ -132,15 +134,15 @@ curl -X POST https://fakepay.ai/api/v1/verify \
   -H "Authorization: Bearer your_api_key" \
   -F "file=@paystub.pdf"
 ```
-
-## Security
+---
+## 🔒Security
 
 - LandingAI and AIorNOT API keys are stored as environment variables and never exposed to the client
 - REST API requires authentication via Bearer token (Coming soon)
 - All API keys must be configured through environment variables
 - Do not include `.env.local` files in version control
-
-## Technologies
+---
+## 🛠️Technologies
 
 - **Next.js 16**: React framework with App Router
 - **TypeScript**: Static typing
@@ -148,8 +150,8 @@ curl -X POST https://fakepay.ai/api/v1/verify \
 - **shadcn/ui**: UI components
 - **LandingAI**: Document classification and extraction
 - **AIorNOT**: AI-generated content detection
-
-## What’s next
+---
+## 🎯What’s next
 
 📄 New document types: bank statements, employment contracts, proof of address
 
