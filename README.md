@@ -3,7 +3,7 @@
 Automatic validation system for Spanish pay stubs using AI to detect fraud and verify authenticity.
 
 Web Demo: https://fakepay-landing.vercel.app/ 
-Video Demo: 
+Video Demo: https://www.youtube.com/watch?v=-vNP2rP7Kvs&t=2s
 
 **Why FakePay?**
 
