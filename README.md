@@ -15,9 +15,11 @@ Our vision is to create an easy to deploy API that can be included in current ID
 
 **About Us**
 
-We're the leading company providing Intelligent Document Processing services in Spain, focused in the banking industry processing >1 million pages per day. 
+At Serimag we're the leading company providing Intelligent Document Processing services in Spain, focused in the banking industry processing >1 million pages per day. 
 
 We're based in Barcelona, founded in 2007 and a strong expertise in NLP and Computer Vision. 
+
+For this demo its been Sergio & Hugo, part of the Serimag team, that have built FakePay during a weekend and some late nights.
 
 ---
 ## ✨FakePay Features
