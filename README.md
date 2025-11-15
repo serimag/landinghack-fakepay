@@ -40,8 +40,6 @@ Save to ./data_rooms/{task_id}/{filename}
 ↓
 LandingAI Parse API → Markdown text
 ↓
-Gemini 2.5 (classification) → document type, locale, confidence
-↓
 PDF → Image conversion (page-wise PNG @300dpi)
 ↓
 AI-image detection (AI or Not) → probability of diffusion-model generation (per page)
@@ -76,8 +74,6 @@ PAYROLL_API_KEY=your_secret_key_for_rest_api
 
 Notes
 
-Classification: Gemini 2.5 is used to validate that the content matches a Spanish pay stub (or other supported type) before deep extraction.
-
 AI-image detection: third‑party detectors are probabilistic. We surface their score as a signal, not a verdict.
 
 Privacy: all artifacts stay within the data_rooms/ sandbox during the session unless persistence is enabled.
@@ -95,7 +91,6 @@ Privacy: all artifacts stay within the data_rooms/ sandbox during the session un
 |----------|--------------|
 | **Landing AI** | Parse & Extract API. |
 | **AI or NOT** | GenAI generated image detector through API |
-| **Gemini 2.5** | LLM to classify the documents based on their content. |
 
 ---
 ## 📥Installation
